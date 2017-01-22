@@ -26,10 +26,13 @@ public class SecurityCamera : MonoBehaviour
 		 public bool active { get; protected set;}
 		 /// <summary>The pivot point used for rotation.</summary>
 		 [SerializeField] private Transform pivotPoint;
-		 [SerializeField] private Transform lens;
+		 /// <summary>The angle at which the camera can detect activity.</summary>
+		 public float viewAngle;
+		 /// <summary>The distance at which the camera can detect activity.</summary>
+		 public float viewDistance;
 
 		 /// <summary>Delegate for events that fire when the camera detects activity (or inactivity).</summary>
-		 private delegate void DetectActivityEvent(int cameraId);
+		 public delegate void DetectActivityEvent(int cameraId);
 		 /// <summary>Occurs when the camera detects any movement and is 
 		 /// both <see cref="active"/> and <see cref="feeding"/>.</summary>
 		 /// <remarks>This event should fire whenever the kinematic collider representing this 
@@ -121,6 +124,31 @@ public class SecurityCamera : MonoBehaviour
 							 {
 										LosePlayer (id);
 							 }
+					}
+		 }
+
+		 /// <summary>Base class for managing camera rotation</summary>
+		 public abstract class CameraMovement
+		 {
+					protected abstract bool Move ();
+		 }
+
+		 /// <summary>Represents a camera that does not allow movement.</summary>
+		 public class NoCameraMovement : CameraMovement
+		 {
+					protected override bool Move()
+					{
+							 return false;
+					}
+		 }
+
+		 /// <summary>Represents a camera that pans back and fourth between two points.</summary>
+		 public class PanningCameraMovement : CameraMovement
+		 {
+					protected override bool Move()
+					{
+
+							 return true;
 					}
 		 }
 }
