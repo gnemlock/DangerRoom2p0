@@ -3,8 +3,8 @@
  *  ---------- https://www.youtube.com/channel/UCmtyQOKKmrMVaKuRXz02jbQ ----------
  */
 
-
 using UnityEngine;
+
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -12,9 +12,10 @@ using UnityEditor;
 namespace LevelGeneration
 {
     #if UNITY_EDITOR
-    using Tooltips = Utility.Tooltips;
+    using Tooltips = Utility.CaveGeneratorTooltips;
     #endif
     
+    //[RequireComponent(typeof(MeshGenerator))]
     public class CaveGenerator : MonoBehaviour
     {
         /// <summary>The current seed this <see cref="CaveGenerator"/> is using for 
@@ -25,7 +26,7 @@ namespace LevelGeneration
         
         /// <summary>If <c>true</c>, this <see cref="CaveGenerator"/> will create a seed using 
         /// <see cref="AssignRandomSeed"/>.</summary>
-        [Tooltip(Tooltips.usingRandomSeed)][SerializeField] private bool usingRandomSeed;
+        [Tooltip(Tooltips.usingRandomSeed)][SerializeField] private bool usingRandomSeed = true;
         /// <summary>The width of the map, in grid dimension.</summary>
         [Tooltip(Tooltips.width)][SerializeField] private uint width = 40;
         /// <summary>The height of the map, in grid dimension.</summary>
@@ -41,6 +42,10 @@ namespace LevelGeneration
         [Tooltip(Tooltips.wallBleed)][SerializeField][Range(0, 8)] private int wallBleed = 4;
         /// <summary>The approximate percent of grid to fill.</summary>
         [Tooltip(Tooltips.fillPercent)][SerializeField][Range(0, 100)] private int fillPercent = 40;
+        
+        #if UNITY_EDITOR
+        [SerializeField] private bool showGizmos = true;
+        #endif
         
         //TODO: This would be more efficient as a bool array; ensure the project does not use integers outside of 1 and 0, first.
         /// <summary>The generated map, represented as a grid of integers.</summary>
@@ -65,14 +70,22 @@ namespace LevelGeneration
         /// <see cref="SmoothMap"/> as specified by <see cref="smoothLevel"/>.</summary>
         public void GenerateMap()
         {
+            //TODO:Ammend summary with inclusion of mesh generation
             // Initialise and fill the map.
             map = new int[width, height];
-            RandomFillMap();
+            FillMap();
             
             // Apply a smooth pass over the map, as many times as specified.
             for (int i = 0; i < smoothLevel; i++)
             {
                 SmoothMap();
+            }
+            
+            MeshGenerator meshGenerator = GetComponent<MeshGenerator>();
+                
+            if(meshGenerator != null)
+            {
+                meshGenerator.GenerateMesh(map, 1);
             }
         }
         
@@ -89,7 +102,7 @@ namespace LevelGeneration
                     // Count the neighbouring walls.
                     int neighbouringWallCount = GetNeighbouringWallCount(x, y);
                     
-                    if(neighbouringWallCount > wallBleed)
+                    if(neighbouringWallCount >= wallBleed)
                     {
                         // If the amount of walls exceeds the specified wallBleed,
                         // Fill in the region.
@@ -150,7 +163,7 @@ namespace LevelGeneration
         /// nature of integers and the potential for fractions, given a real percentage value of 
         /// the map. Furthermore, we will automatically allocate walls to the perimeter of the map, 
         /// which will not be counted towards the percentage.
-        void RandomFillMap()
+        void FillMap()
         {
             if (usingRandomSeed)
             {
@@ -186,14 +199,15 @@ namespace LevelGeneration
                 }
             }
         }
-
+        
+        //TODO:We are commenting out the below OnDrawGizmos method so it does not clash with the MeshGenerator.OnDrawGizmos method. Find a more suitable way to allow the user to swap between "gizmo stages" via the inspector. May need a custom property drawer.
         #if UNITY_EDITOR
         /// <summary>This method will be called when we draw gizmos.</summary>
         /// <remarks>This method has been marked for exclusive use with the editor, and thus 
         /// will not be available in the published game.</remarks>
         void OnDrawGizmos()
         {
-            if (map != null)
+            if (showGizmos && map != null)
             {
                 // If we currently have a map to work with, 
                 // For each x coordinate on the map,
@@ -227,7 +241,7 @@ namespace LevelGeneration
 namespace LevelGeneration.Utility
 {
     /// <summary>This class holds the tooltips for variables serialized to the inspector.</summary>
-    public static class Tooltips
+    public static class CaveGeneratorTooltips
     {
         #if UNITY_EDITOR
         public const string seed = "What seed should the generator use to build the map " +
@@ -245,7 +259,7 @@ namespace LevelGeneration.Utility
     }
     
     /// <summary>This class provides additional functionality to the editor.</summary>
-    [CustomEditor(typeof(CaveGenerator))] public class CaveGeneratorEditor : Editor
+    [CustomEditor(typeof(CaveGenerator))] public class CaveGeneratorInspector : Editor
     {
         #if UNITY_EDITOR
         /// <summary>This method will be called to draw the inspector interface for the target 
@@ -254,7 +268,7 @@ namespace LevelGeneration.Utility
         {
             // Explicitly reference the target class as a CaveGenerator, so we have CaveGenerator 
             // specific access.
-            CaveGenerator instance = (CaveGenerator)target;
+            CaveGenerator caveGenerator = (CaveGenerator)target;
             
             // Draw the default inspector, so we still have the default interface.
             DrawDefaultInspector();
@@ -263,7 +277,7 @@ namespace LevelGeneration.Utility
             {
                 // Add a button called "Generate Map", and when it is pressed, 
                 // generate a map from the current settings.
-                instance.GenerateMap();
+                caveGenerator.GenerateMap();
             }  
         }
         #endif
