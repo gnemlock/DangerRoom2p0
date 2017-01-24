@@ -59,7 +59,7 @@ namespace Drawing.Utility
         {
             // Explicitly reference the target class as a CaveGenerator, so we have CaveGenerator 
             // specific access.
-            Line line = (Line)target;
+            Line line = target as Line;
             Transform transform = line.transform;
             
             Quaternion rotation = (Tools.pivotRotation == PivotRotation.Local) ? 

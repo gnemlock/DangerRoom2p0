@@ -268,7 +268,7 @@ namespace LevelGeneration.Utility
         {
             // Explicitly reference the target class as a CaveGenerator, so we have CaveGenerator 
             // specific access.
-            CaveGenerator caveGenerator = (CaveGenerator)target;
+            CaveGenerator caveGenerator = target as CaveGenerator;
             
             // Draw the default inspector, so we still have the default interface.
             DrawDefaultInspector();
