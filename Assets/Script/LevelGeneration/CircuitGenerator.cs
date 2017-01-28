@@ -121,6 +121,46 @@ namespace LevelGeneration.Utility
                 circuitGenerator.EditorGenerateCircuit();
             }
         }
+        
+        /*private void OnSceneGUI()
+        {
+            // Explicitly reference the target class as a CubicBeizerCurve, so we have CubicBeizerCurve 
+            // specific access, and create a local reference to the transform.
+            CircuitGenerator circuitGenerator = (CircuitGenerator)target;
+
+            int handleCount = circuitGenerator.waypoints.Length;
+            Vector3[] handlePosition = new Vector3[handleCount];
+
+            for(int i = 0; i < handleCount; i++)
+            {
+                
+                Vector3 point = circuitGenerator.waypoints[i];
+                
+                // Perform a BeginChangeCheck so we can tell if the position of the handle changes, 
+                // through user translation.
+                EditorGUI.BeginChangeCheck();
+
+                // Create a handle at the determined point, using the current rotation, and update 
+                // point to reflect any new changes caused by user translation.
+                point = Handles.DoPositionHandle(point, Quaternion.identity);
+                
+                if(EditorGUI.EndChangeCheck())
+                {
+                    // If the editor detected change, i.e. the user translated the handle via scene view, 
+                    // Record a change to the inspector and update the original position reference in 
+                    // the actual curve to reflect the new position in local coordinates.
+                    PrepareChange(circuitGenerator, "Moving Waypoint" + (i + 1));
+                    circuitGenerator.waypoints[i] = point;
+                }
+            }
+        }*/
+        
+        public void PrepareChange(CircuitGenerator cq, string name)
+        {
+            // Record the current object, using the desired description, and mark it as dirty.
+            Undo.RecordObject(cq, name);
+            EditorUtility.SetDirty(cq);
+        }
         #endif
     }
 }
