@@ -6,6 +6,7 @@ using UnityEditor;
 
 public static class ExtensionMethods 
 {
+    // Used in: Drawing
     /// <summary>Prepares an object for change, so it may be undone, and recognised for the 
     /// purpose of alerting the user to unsaved changes.</summary>
     /// <param name="editor">This method is part of the <see cref="Editor"/> class.</param>

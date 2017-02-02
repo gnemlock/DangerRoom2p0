@@ -6,13 +6,11 @@ using UnityEngine;
 
 #if UNITY_EDITOR
 using UnityEditor;
+using Label = LevelGeneration.Utility.CircuitGeneratorLabels;
 #endif
 
 namespace LevelGeneration
 {
-    #if UNITY_EDITOR
-    using Tooltips = Utility.CircuitGeneratorTooltips;
-    #endif
     
     public class CircuitGenerator : MonoBehaviour
     {
@@ -20,6 +18,8 @@ namespace LevelGeneration
         [SerializeField] private int maxDistance = 100;
         [SerializeField] private int minDistance = 10;
         [SerializeField] private string seed;
+        
+        public bool usingRandomSeed = true;
         
         #if UNITY_EDITOR
         [SerializeField] private bool showGizmos = true;
@@ -30,8 +30,22 @@ namespace LevelGeneration
         
         public Vector3[] waypoints;
         
+        /// <summary>Assigns a value to <see cref="seed"/> based off the current 
+        /// <see cref="Time.time"/> value.</summary>
+        private void AssignRandomSeed()
+        {
+            // Set seed to the string value of the current time since level load, in seconds.
+            // This will change so quickly that it imitates a random number to the extent we need.
+            seed = Time.time.ToString();
+        }
+        
         void GenerateCircuit()
         {
+            if(usingRandomSeed)
+            {
+                AssignRandomSeed();
+            }
+            
             waypoints = new Vector3[waypointCount];
             
             System.Random numberGenerator = new System.Random(seed.GetHashCode());
@@ -43,6 +57,10 @@ namespace LevelGeneration
                 
                 waypoints[i] = (transform.position + (transform.forward * distance));
             }
+            
+            transform.position = Vector3.zero;
+            transform.rotation = Quaternion.identity;
+            SendToSpline();
         }
         
         #if UNITY_EDITOR
@@ -87,6 +105,11 @@ namespace LevelGeneration
         {
             GenerateCircuit();
         }
+        
+        public void SendToSpline()
+        {
+            Drawing.BezierSpline bezierSpline = GetComponent<Drawing.BezierSpline>();
+        }
         #endif
     }
 }
@@ -95,7 +118,7 @@ namespace LevelGeneration
 namespace LevelGeneration.Utility
 {
     /// <summary>This class holds the tooltips for variables serialized to the inspector.</summary>
-    public static class CircuitGeneratorTooltips
+    public static class CircuitGeneratorLabels
     {
         #if UNITY_EDITOR
         #endif
@@ -111,7 +134,7 @@ namespace LevelGeneration.Utility
         {
             // Explicitly reference the target class as a CaveGenerator, so we have CaveGenerator 
             // specific access.
-            CircuitGenerator circuitGenerator = (CircuitGenerator)target;
+            CircuitGenerator circuitGenerator = target as CircuitGenerator;
 
             // Draw the default inspector, so we still have the default interface.
             DrawDefaultInspector();
@@ -120,7 +143,12 @@ namespace LevelGeneration.Utility
             {
                 circuitGenerator.EditorGenerateCircuit();
             }
-        }
+            
+            if(GUILayout.Button("Spline"))
+            {
+                circuitGenerator.SendToSpline();
+            }
+        }   
         
         /*private void OnSceneGUI()
         {

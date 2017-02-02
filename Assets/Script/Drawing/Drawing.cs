@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace Drawing
 {
-    public static class BeizerUtility
+    public static class BezierUtility
     {
         /// <summary>Finds a specific point on a quadratic Beizer curve.</summary>
         /// <returns>The coordinates of the point.</returns>
@@ -108,5 +108,12 @@ namespace Drawing
                 + 6.0f * oneMinusT * t * (pointThree - pointTwo)
                 + 3.0f * t * t * (pointFour - pointThree));
         }
+    }
+    
+    public enum BezierPointMode
+    {
+        Free,
+        Aligned,
+        Mirrored
     }
 }
