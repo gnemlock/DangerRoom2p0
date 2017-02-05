@@ -7,6 +7,7 @@ using UnityEngine;
 
 namespace Drawing
 {
+    /// <summary>Provides general Bezier curve functionality.</summary>
     public static class BezierUtility
     {
         /// <summary>Finds a specific point on a quadratic Beizer curve.</summary>
@@ -110,10 +111,31 @@ namespace Drawing
         }
     }
     
+    /// <summary>Represents a smoothing mode, used to determine the logic applied to a bezier curve 
+    /// to ensure the line smoothly meets with a connecting bezier curve. Mode changes are 
+    /// cumulative.</summary>
     public enum BezierPointMode
     {
+        /// <summary>A free point will not have enforced smoothing.</summary>
         Free,
+        /// <summary>An aligned point will copy the vector delta across to the opposite point, but 
+        /// ensure the opposing point's distance to the middle point is retained.</summary>
         Aligned,
+        /// <summary>A mirrored point will copy the vector delta across to the opposite point.
+        /// </summary>
         Mirrored
+    }
+    
+    public interface IBezierInterface
+    {
+        Vector3 GetDirectionOfPointOnCurve(float t);
+        
+        Vector3 GetPoint(int pointIndex);
+        
+        Vector3 GetPointOnCurve(float t);
+        
+        Vector3 GetVelocityOfPointOnCurve(float t);
+        
+        void SetPoint(int pointIndex, Vector3 newPoint);
     }
 }

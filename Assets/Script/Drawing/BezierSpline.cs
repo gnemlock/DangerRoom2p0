@@ -12,7 +12,7 @@ using Label = Drawing.Utility.BezierSplineLabels;
 
 namespace Drawing
 {
-    public class BezierSpline : MonoBehaviour
+    public class BezierSpline : MonoBehaviour, IBezierInterface
     {
         /// <summary>The points making up this <see cref="BezierSpline"/>.</summary>
         /// <remarks>This array contains points that are used to draw cubic Bezier curves. As such, 
@@ -188,60 +188,62 @@ namespace Drawing
             }
             
             // Convert the transition index back to a point index, pointing to the joining point 
-            // affected by the transition. We will also store the index to the position we are 
-            // changing, when applying smoothing, and the position of the point being left as is.
+            // affected by the transition. We will also store the indices to the left and right 
+            // of the middle index, and a boolean to determine wether we are moving the right or 
+            // left index. We should not move the selected index, when smoothing. If we have the 
+            // middle point selected, we will move the right index.
             int middleIndex = modeIndex * 3;
-            int fixedIndex;
-            int enforcedIndex;
+            int leftIndex = middleIndex - 1;
+            int rightIndex = middleIndex + 1;
+            bool movingRightIndex = (pointIndex <= middleIndex);
             
-            if(pointIndex <= middleIndex)
+            if(leftIndex < 0)
             {
-                // If the target index is, or is before, the middle index, set the index before the 
-                // middle index as the fixed index.
-                fixedIndex = middleIndex - 1;
-                
-                if(fixedIndex < 0)
-                {
-                    // If the fixed index falls before the start, we must be looping. The last 
-                    // index represents the same point as the middle index, so the fixed index
-                    // should be set to one before the last index.
-                    fixedIndex = points.Length - 2;
-                }
-                
-                enforcedIndex = middleIndex + 1;
-                
-                if(enforcedIndex >= points.Length)
-                {
-                    enforcedIndex = 1;
-                }
-            }
-            else
-            {
-                fixedIndex = middleIndex + 1;
-                
-                if(fixedIndex >= points.Length)
-                {
-                    fixedIndex = 1;
-                }
-                
-                enforcedIndex = middleIndex - 1;
-                
-                if(enforcedIndex < 0)
-                {
-                    enforcedIndex = points.Length - 2;
-                }
+                // If the left index falls out of the array, reset it to the last index 
+                // pointing to a non-joining point.
+                leftIndex = points.Length - 2;
             }
             
+            if(rightIndex >= points.Length)
+            {
+                // If the right index falls out of the array, reset it to the first index 
+                // pointing to a non-joining point.
+                rightIndex = 1;
+            }
+            
+            // Store the point referenced by the middle index. We also need to store the differance 
+            // between the middle point and the fixed point, so we can use it to apply smoothing 
+            // to the other side.
             Vector3 middlePoint = points[middleIndex];
-            Vector3 enforcedTangent = middlePoint - points[fixedIndex];
+            Vector3 enforcedDelta = movingRightIndex ? 
+                (middlePoint - points[leftIndex]) : (middlePoint - points[rightIndex]);
             
             if(mode == BezierPointMode.Aligned)
             {
-                enforcedTangent = enforcedTangent.normalized 
-                    * Vector3.Distance(middlePoint, points[enforcedIndex]);
+                // If we are aligning the vectors, we need to work out the distance between the 
+                // middle point and the point we are moving.
+                float vectorDistance = movingRightIndex ? 
+                    Vector3.Distance(middlePoint, points[rightIndex]) :
+                    Vector3.Distance(middlePoint, points[leftIndex]);
+                
+                // As we are only aligning the vectors, instead of mirroring them, we need to 
+                // use the current tangent as a direction, and multiply it by our determined 
+                // distance.
+                enforcedDelta = enforcedDelta.normalized * vectorDistance;
             }
             
-            points[enforcedIndex] = middlePoint + enforcedTangent;
+            if(movingRightIndex)
+            {
+                // If we are moving the right index, move the right index to the position 
+                // determined by the middle point and the derived tangent.
+                points[rightIndex] = middlePoint + enforcedDelta;
+            }
+            else
+            {
+                // Else, we are moving the left index; move the left index to the position 
+                // determined by the middle point and the derived tangent.
+                points[leftIndex] = middlePoint + enforcedDelta;
+            }
         }
         
         /// <summary>Finds the starting index of a specific curve in the <see cref="points"/> 
@@ -305,12 +307,12 @@ namespace Drawing
         /// <summary>Gets a point in the <see cref="points"/> array.</summary>
         /// <returns>The position pointed to by <c>index</c>, in the <see cref="points"/> 
         /// array.</returns>
-        /// <param name="index">The index of the required point in the <see cref="points"/> 
+        /// <param name="pointIndex">The index of the required point in the <see cref="points"/> 
         /// array.</param>
-        public Vector3 GetPoint(int index)
+        public Vector3 GetPoint(int pointIndex)
         {
             // Return the Vector3 found at the specified index in points.
-            return points[index];
+            return points[pointIndex];
         }
         
         /// <summary>Finds the specified position on this <see cref="BezierSpline"/> based off a 
@@ -566,7 +568,7 @@ namespace Drawing.Utility
                 
                 // Draw a bezier curve between the current 4 positions.
                 Handles.DrawBezier(handlePosition[0], handlePosition[3], handlePosition[1], 
-                    handlePosition[3], Color.red, null, 2.0f);
+                    handlePosition[2], Color.red, null, 2.0f);
                 
                 // Set the first position of the next curve as the last position of this curve, 
                 // so the curves connect.
@@ -614,7 +616,7 @@ namespace Drawing.Utility
             // Draw the first tangent in the Bezier curve.
             Handles.color = Color.green;
             Handles.DrawLine(lineStart, lineStart 
-                + (bezierSpline.GetDirection(0f) * tangentLength));
+                + (bezierSpline.GetDirectionOfPointOnCurve(0f) * tangentLength));
 
             // Cache a local version of our line steps integer, multiplied by our curve count. This 
             // now represents the total line count across the entire spline.
@@ -631,7 +633,7 @@ namespace Drawing.Utility
 
                 // Draw out the tangent from the derived position.
                 Handles.DrawLine(lineStart, lineStart + (bezierSpline
-                    .GetDirection(t / (float)trueLineSteps) * tangentLength));
+                    .GetDirectionOfPointOnCurve(t / (float)trueLineSteps) * tangentLength));
             }
         }
         

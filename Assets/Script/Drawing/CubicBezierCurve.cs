@@ -14,32 +14,56 @@ namespace Drawing
     #if UNITY_EDITOR
     using Tooltips = Utility.CubicBezierCurveTooltips;
     #endif
-
     
     /// <summary>Represents a cubic Bezier curve; a Bezier curve that takes three coordinates.
     /// </summary>
     public class CubicBezierCurve : QuadraticBezierCurve
     {
+        /// <summary>The fourth point in this Bezier curve.</summary>
+        [Tooltip(Tooltips.pointFour)][SerializeField] protected Vector3 pointFour;
+        
         #if UNITY_EDITOR
         /// <summary>This method will be called whenever the class is instantiated or reset via the 
         /// inspector. This method is EDITOR ONLY.</summary>
         protected override void Reset()
         {
-            // Reset the pointsdd array to a length of 4.
-            Reset(4);
+            // Set the fourth point to the default value, and use the base method to reset the rest.
+            pointFour = new Vector3(4.0f, 0f, 0f);
+            base.Reset();
         }
         #endif
+        
+        /// <summary>Gets one of the four points in this <see cref="CubicBezierCurve"/>,
+        /// using an index.</summary>
+        /// <returns>The first, second, third or fourth point.</returns>
+        /// <param name="pointIndex">The index representation of the desired point. <c>0</c> will 
+        /// return <see cref="pointOne"/>, <c>1</c> will return <see cref="pointTwo"/>, <c>3</c> will 
+        /// return <see cref="pointFour"/> and all other values will return 
+        /// <see cref="pointThree"/>.</param>
+        public override Vector3 GetPoint(int pointIndex)
+        {
+            if(pointIndex == 3)
+            {
+                // If the point index is 3, return the fourth point.
+                return pointFour;
+            }
+            else
+            {
+                // Else, we can defer to the base method for the correct point.
+                return base.GetPoint(pointIndex);
+            }
+        }
         
         /// <summary>Finds the coordinates of a specified point on this 
         /// <see cref="CubicBezierCurve"/>.</summary>
         /// <returns>The coordinates of the point.</returns>
         /// <param name="t">The specific point, defined as a normalised interpolant.
         /// This value will be clamped to 0 and 1.</param>
-        public override Vector3 GetPointOnCurve (float t)
+        public override Vector3 GetPointOnCurve(float t)
         {
             // Find the point, and convert it to world coordinates before returning.
             return transform.TransformPoint(
-                BezierUtility.GetPoint(pointsdd[0], pointsdd[1], pointsdd[2], pointsdd[3], t));
+                BezierUtility.GetPoint(pointOne, pointTwo, pointThree, pointFour, t));
         }
         
         /// <summary>Finds the velocity of this <see cref="CubicBezierCurve"/>, at a specified point.
@@ -47,22 +71,54 @@ namespace Drawing
         /// <returns>The velocity at the specified point.</returns>
         /// <param name="t">The specific point, defined as a normalised interpolant.
         /// This value will be clamped to 0 and 1.</param>
-        public override Vector3 GetVelocity(float t)
+        public override Vector3 GetVelocityOfPointOnCurve(float t)
         {
             // Find the point, and convert it to world coordinates. Velocity is a direction, not 
             // a position, so remove the position offset before returning.
             return transform.TransformPoint(
-                BezierUtility.GetFirstDerivative(pointsdd[0], pointsdd[1], pointsdd[2], pointsdd[3], t))
+                BezierUtility.GetFirstDerivative(pointOne, pointTwo, pointThree, pointFour, t))
                 - transform.position;
+        }
+        
+        /// <summary>Sets the specified point in this <see cref="QuadraticBezierCurve"/>.</summary>
+        /// <param name="pointIndex">The index of the point being set. <see cref="pointOne"/> will 
+        /// be set with a value of <c>0</c>, <see cref="pointTwo"/> will be set with a value of 
+        /// <c>1</c>, <see cref="pointThree"/> will be set with a value of <c>2</c> and 
+        /// <see cref="pointFour"/> will be set with a value of <c>3</c>.</param>
+        /// <param name="newPoint">The new value for the desired point.</param>
+        public override void SetPoint(int pointIndex, Vector3 newPoint)
+        {
+            if(pointIndex == 3)
+            {
+                // If the index is 3, set the fourth point as the value of the new point.
+                pointFour = newPoint;
+            }
+            else
+            {
+                // Else, we can defer to the base method to set the correct point.
+                base.SetPoint(pointIndex, newPoint);
+            }
         }
     }
 }
 
 namespace Drawing.Utility
 {
-    /// <summary>This class holds the tooltips for variables serialized to the inspector.</summary>
+    /// <summary>This class holds the tooltips for variables serialised to the inspector.</summary>
     public static class CubicBezierCurveTooltips
     {
+        #if UNITY_EDITOR
+        public const string pointFour = "The fourth point.";
+        #endif
+    }
+    
+    /// <summary>This class holds the various labels used in drawing GUI to the inspector.</summary>
+    public static class CubicBezierCurveLabels
+    {
+        #if UNITY_EDITOR
+        /// <summary>The description given to moving a point in the history window.</summary>
+        public const string movePointDescription = "Move Point - Cubic Bezier Curve";
+        #endif
     }
     
     /// <summary>This class provides additional functionality to the editor.</summary>
@@ -75,25 +131,6 @@ namespace Drawing.Utility
         private Transform transform;
         /// <summary>Cached reference to the intended handle rotation.</summary>
         private Quaternion handleRotation;
-        
-        /// <summary>This method will be called to draw the inspector interface for the target 
-        /// class.</summary>
-        public override void OnInspectorGUI()
-        {
-            // Explicitly reference the target class as a CubicBezierCurve, so we have 
-            // CubicBezierCurve specific access.
-            cubicBezierCurve = target as CubicBezierCurve;
-            
-            // Draw the default inspector, so we still have the default interface.
-            DrawDefaultInspector();
-            
-            if(GUILayout.Button("Reset Colours"))
-            {
-                // Add a button called "Reset Colours", and when it is pressed, 
-                // reset the colours used in the curve
-                cubicBezierCurve.ResetColours();
-            }
-        }
         
         /// <summary>This method will be called to draw the <see cref="CubicBezierCurve"/>
         /// in to the scene view.</summary>
@@ -121,19 +158,15 @@ namespace Drawing.Utility
 
             // Draw the step lines between the two pointsdd. This will represent the initial line 
             // created by directly connecting the three pointsdd.
-            Handles.color = cubicBezierCurve.stepColour;
+            Handles.color = QuadraticBezierCurveColours.stepColour;
             Handles.DrawLine(handlePosition[0], handlePosition[1]);
             Handles.DrawLine(handlePosition[1], handlePosition[2]);
             Handles.DrawLine(handlePosition[2], handlePosition[3]);
             
-            if(cubicBezierCurve.displayTangents)
-            {
-                // If we have "Display Tangents" selected, show the curve directions.
-                ShowDirections();
-            }
+            ShowDirections();
             
             Handles.DrawBezier(handlePosition[0], handlePosition[3], handlePosition[1], 
-                handlePosition[2], cubicBezierCurve.lineColour, null, 2f);
+                handlePosition[2], QuadraticBezierCurveColours.lineColour, null, 2f);
         }
         
         /// <summary>Manages the display of directional tangents off of the curve.</summary>
@@ -143,12 +176,13 @@ namespace Drawing.Utility
             Vector3 lineStart = cubicBezierCurve.GetPointOnCurve(0f);
             
             // Draw the first tangent in the Bezier curve.
-            Handles.color = cubicBezierCurve.tangentColour;
+            Handles.color = QuadraticBezierCurveColours.tangentColour;
             Handles.DrawLine(lineStart, lineStart 
-                + (cubicBezierCurve.GetDirection(0f) * CubicBezierCurve.tangentLength));
+                + (cubicBezierCurve.GetDirectionOfPointOnCurve(0f) 
+                * QuadraticBezierCurveDimensions.tangentLength));
             
             // Cache a local version of our line steps integer
-            int lineSteps = cubicBezierCurve.lineSteps;
+            int lineSteps = QuadraticBezierCurveDimensions.lineSteps;
             
             for(int i = 1; i <= lineSteps; i++)
             {
@@ -161,7 +195,8 @@ namespace Drawing.Utility
                 
                 // Draw out tangent.
                 Handles.DrawLine(lineStart, lineStart 
-                    + (cubicBezierCurve.GetDirection(t) * CubicBezierCurve.tangentLength));
+                    + (cubicBezierCurve.GetDirectionOfPointOnCurve(t) 
+                    * QuadraticBezierCurveDimensions.tangentLength));
             }
         }
         
@@ -173,7 +208,7 @@ namespace Drawing.Utility
         {
             // Create a local position to contain the position pointed to by the requested index, 
             // converted to world coordinates.
-            Vector3 point = transform.TransformPoint(cubicBezierCurve.pointsdd[pointIndex]);
+            Vector3 point = transform.TransformPoint(cubicBezierCurve.GetPoint(pointIndex));
 
             // Perform a BeginChangeCheck so we can tell if the position of the handle changes, 
             // through user translation.
@@ -188,8 +223,8 @@ namespace Drawing.Utility
                 // If the editor detected change, i.e. the user translated the handle via scene view, 
                 // Record a change to the inspector and update the original position reference in 
                 // the actual curve to reflect the new position in local coordinates.
-                this.PrepareChange(cubicBezierCurve, "Move Point - Cubic Bezier Curve");
-                cubicBezierCurve.pointsdd[pointIndex] = transform.InverseTransformPoint(point);
+                this.PrepareChange(cubicBezierCurve, CubicBezierCurveLabels.movePointDescription);
+                cubicBezierCurve.SetPoint(pointIndex, transform.InverseTransformPoint(point));
             }
 
             // Return the updated position.
