@@ -22,6 +22,12 @@ namespace LevelGeneration
         
         List<Vector3> vertices;
         List<int> triangles;
+        Dictionary<int, List<Triangle>> triangleDictionary = new Dictionary<int, List<Triangle>>();
+        
+        List<List<int>> outlines = new List<List<int>>();
+        HashSet<int> checkedVertices = new HashSet<int>();
+        
+        public MeshFilter walls;
         
         #if UNITY_EDITOR
         [SerializeField] private bool showGizmos = true;
@@ -29,6 +35,10 @@ namespace LevelGeneration
         
         public void GenerateMesh(int [,] map, float squareSize)
         {
+            outlines.Clear();
+            checkedVertices.Clear();
+            triangleDictionary.Clear();
+            
             grid = new Grid(map, squareSize);
             vertices = new List<Vector3>();
             triangles = new List<int>();
@@ -47,7 +57,42 @@ namespace LevelGeneration
             mesh.vertices = vertices.ToArray();
             mesh.triangles = triangles.ToArray();
             mesh.RecalculateNormals();
-        } 
+            
+            CreateWallMesh();
+        }
+        
+        void CreateWallMesh()
+        {
+            CalculateMeshOutlines();
+            
+            List<Vector3> wallVertices = new List<Vector3>();
+            List<int> wallTriangles = new List<int>();
+            float wallHeight = 5.0f;
+            Mesh wallMesh = new Mesh();
+            
+            foreach(List<int> outline in outlines)
+            {
+                for(int i = 0; i < outline.Count - 1; i++)
+                {
+                    int startIndex = wallVertices.Count;
+                    wallVertices.Add(vertices[outline[i]]); // left
+                    wallVertices.Add(vertices[outline[i + 1]]); // right
+                    wallVertices.Add(vertices[outline[i]] - Vector3.back * wallHeight); // bottom left
+                    wallVertices.Add(vertices[outline[i + 1]] - Vector3.back * wallHeight); // bottom right
+                    
+                    wallTriangles.Add(startIndex);
+                    wallTriangles.Add(startIndex + 2);
+                    wallTriangles.Add(startIndex + 3);
+                    wallTriangles.Add(startIndex + 3);
+                    wallTriangles.Add(startIndex + 1);
+                    wallTriangles.Add(startIndex);
+                }
+            }
+            wallMesh.vertices = wallVertices.ToArray();
+            wallMesh.triangles = wallTriangles.ToArray();
+            
+            walls.mesh = wallMesh;
+        }
         
         void TriangulateSquare(Square square)
         {
@@ -66,13 +111,13 @@ namespace LevelGeneration
                     
                 // 1 point selected.
                 case 1:
-                    MeshFromPoints(square.centerBottom, square.bottomLeft, square.centerLeft);
+                    MeshFromPoints(square.centerLeft, square.centerBottom, square.bottomLeft);
                     break;
                 case 2:
-                    MeshFromPoints(square.centerRight, square.bottomRight, square.centerBottom);
+                    MeshFromPoints(square.bottomRight, square.centerBottom, square.centerRight);
                     break;
                 case 4:
-                    MeshFromPoints(square.centerTop, square.topRight, square.centerRight);
+                    MeshFromPoints(square.topRight, square.centerRight, square.centerTop);
                     break;
                 case 8:
                     MeshFromPoints(square.topLeft, square.centerTop, square.centerLeft);
@@ -126,6 +171,10 @@ namespace LevelGeneration
                 case 15:
                     MeshFromPoints(square.topLeft, square.topRight, square.bottomRight, 
                         square.bottomLeft);
+                    checkedVertices.Add(square.topLeft.vertexIndex);
+                    checkedVertices.Add(square.topRight.vertexIndex);
+                    checkedVertices.Add(square.bottomRight.vertexIndex);
+                    checkedVertices.Add(square.bottomLeft.vertexIndex);
                     break;
             }   
         }
@@ -157,6 +206,107 @@ namespace LevelGeneration
             triangles.Add(a.vertexIndex);
             triangles.Add(b.vertexIndex);
             triangles.Add(c.vertexIndex);
+            
+            Triangle newTriangle = new Triangle(a.vertexIndex, b.vertexIndex, c.vertexIndex);
+            AddTriangleToDictionary(a.vertexIndex, newTriangle);
+            AddTriangleToDictionary(b.vertexIndex, newTriangle);
+            AddTriangleToDictionary(c.vertexIndex, newTriangle);
+        }
+        
+        int GetConnectedOutlineVertex(int vertexIndex)
+        {
+            List<Triangle> trianglesContainingIndex = triangleDictionary[vertexIndex];
+            
+            for(int i = 0; i < trianglesContainingIndex.Count; i++)
+            {
+                Triangle triangle = trianglesContainingIndex[i];
+                
+                for(int j = 0; j < 3; j++)
+                {
+                    int vertexB = triangle[j];
+                    
+                    if(vertexB != vertexIndex && !checkedVertices.Contains(vertexB) 
+                        && IsOutlineEdge(vertexIndex, vertexB))
+                    {
+                        return vertexB;
+                    }
+                }
+            }
+            
+            return -1;
+        }
+        
+        bool IsOutlineEdge(int vertexA, int vertexB)
+        {
+            List<Triangle> trianglesA = triangleDictionary[vertexA];
+            int sharedTriangleCount = 0;
+            
+            for(int i = 0; i < trianglesA.Count; i++)
+            {
+                if(trianglesA[i].Contains(vertexB))
+                {
+                    sharedTriangleCount++;
+                    
+                    if(sharedTriangleCount > 1)
+                    {
+                        break;
+                    }
+                }
+            }
+            
+            return (sharedTriangleCount == 1);
+        }
+        
+        void AddTriangleToDictionary(int vertexIndexKey, Triangle triangle)
+        {
+            if(triangleDictionary.ContainsKey(vertexIndexKey))
+            {
+                triangleDictionary[vertexIndexKey].Add(triangle);
+            }
+            else
+            {
+                List<Triangle> newTriangleList = new List<Triangle>();
+                newTriangleList.Add(triangle);
+                triangleDictionary.Add(vertexIndexKey, newTriangleList);
+            }
+        }
+        
+        void CalculateMeshOutlines()
+        {
+            for(int vertexIndex = 0; vertexIndex < vertices.Count; vertexIndex++)
+            {
+                if(!checkedVertices.Contains(vertexIndex))
+                {
+                    int newOutlineVertex = GetConnectedOutlineVertex(vertexIndex);
+                    
+                    if(newOutlineVertex != -1)
+                    {
+                        checkedVertices.Add(vertexIndex);
+                        
+                        List<int> newOutline = new List<int>();
+                        
+                        newOutline.Add(vertexIndex);
+                        outlines.Add(newOutline);
+                        FollowOutline(newOutlineVertex, outlines.Count - 1);
+                        
+                        // re add the first vertex to connect the outline
+                        outlines[outlines.Count - 1].Add(vertexIndex);
+                    }
+                }
+            }
+        }
+        
+        void FollowOutline(int vertexIndex, int outlineIndex)
+        {
+            outlines[outlineIndex].Add(vertexIndex);
+            checkedVertices.Add(vertexIndex);
+            
+            int nextVertexIndex = GetConnectedOutlineVertex(vertexIndex);
+            
+            if(nextVertexIndex != -1)
+            {
+                FollowOutline(nextVertexIndex, outlineIndex);
+            }
         }
         
         public void OnDrawGizmos()
@@ -186,6 +336,40 @@ namespace LevelGeneration
                         Gizmos.DrawCube(grid.squares[x, y].centerLeft.position, Vector3.one * 0.15f);
                     }
                 }
+            }
+        }
+               
+        struct Triangle
+        {
+            public int vertexIndexA;
+            public int vertexIndexB;
+            public int vertexIndexC;
+            int[] vertices;
+            
+            public Triangle(int vertexIndexA, int vertexIndexB, int vertexIndexC)
+            {
+                this.vertexIndexA = vertexIndexA;
+                this.vertexIndexB = vertexIndexB;
+                this.vertexIndexC = vertexIndexC;
+                
+                vertices = new int[3];
+                vertices[0] = vertexIndexA;
+                vertices[1] = vertexIndexB;
+                vertices[2] = vertexIndexC;
+            }
+            
+            public int this[int i]
+            {
+                get
+                {
+                    return vertices[i];
+                }
+            }
+            
+            public bool Contains(int vertexIndex)
+            {
+                return (vertexIndex == vertexIndexA || vertexIndex == vertexIndexB 
+                    || vertexIndex == vertexIndexC);
             }
         }
         
