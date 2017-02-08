@@ -102,7 +102,7 @@ namespace LevelGeneration
                     // Count the neighbouring walls.
                     int neighbouringWallCount = GetNeighbouringWallCount(x, y);
                     
-                    if(neighbouringWallCount >= wallBleed)
+                    if(neighbouringWallCount > wallBleed)
                     {
                         // If the amount of walls exceeds the specified wallBleed,
                         // Fill in the region.

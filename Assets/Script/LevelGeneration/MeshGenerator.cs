@@ -4,6 +4,7 @@
  */
 
 using UnityEngine;
+using System.Collections.Generic;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -19,6 +20,9 @@ namespace LevelGeneration
     {
         public Grid grid;
         
+        List<Vector3> vertices;
+        List<int> triangles;
+        
         #if UNITY_EDITOR
         [SerializeField] private bool showGizmos = true;
         #endif
@@ -26,7 +30,134 @@ namespace LevelGeneration
         public void GenerateMesh(int [,] map, float squareSize)
         {
             grid = new Grid(map, squareSize);
-        }    
+            vertices = new List<Vector3>();
+            triangles = new List<int>();
+            
+            for(int x = 0; x < grid.squares.GetLength(0); x++)
+            {
+                for(int y = 0; y < grid.squares.GetLength(1); y++)
+                {
+                      TriangulateSquare(grid.squares[x, y]);
+                }
+            }
+            
+            Mesh mesh = new Mesh();
+            GetComponent<MeshFilter>().mesh = mesh;
+            
+            mesh.vertices = vertices.ToArray();
+            mesh.triangles = triangles.ToArray();
+            mesh.RecalculateNormals();
+        } 
+        
+        void TriangulateSquare(Square square)
+        {
+            switch(square.configuration)
+            {
+                /*   
+                 *   8 - - - 4
+                 *   |       |    1  2  3  4
+                 *   |       |    1  2  4  8
+                 *   1 - - - 2
+                 */
+                
+                // 0 points selected.
+                case 0:
+                    break;
+                    
+                // 1 point selected.
+                case 1:
+                    MeshFromPoints(square.centerBottom, square.bottomLeft, square.centerLeft);
+                    break;
+                case 2:
+                    MeshFromPoints(square.centerRight, square.bottomRight, square.centerBottom);
+                    break;
+                case 4:
+                    MeshFromPoints(square.centerTop, square.topRight, square.centerRight);
+                    break;
+                case 8:
+                    MeshFromPoints(square.topLeft, square.centerTop, square.centerLeft);
+                    break;
+                    
+                // 2 points selected
+                case 3:
+                    MeshFromPoints(square.centerRight, square.bottomRight, square.bottomLeft, 
+                        square.centerLeft);
+                    break;
+                case 5:
+                    MeshFromPoints(square.centerTop, square.topRight, square.centerRight, 
+                        square.centerBottom, square.bottomLeft, square.centerLeft);
+                    break;
+                case 6:
+                    MeshFromPoints(square.centerTop, square.topRight, square.bottomRight, 
+                        square.centerBottom);
+                    break;
+                case 9:
+                    MeshFromPoints(square.topLeft, square.centerTop, square.centerBottom, 
+                        square.bottomLeft);
+                    break;
+                case 10:
+                    MeshFromPoints(square.topLeft, square.centerTop, square.centerRight, 
+                        square.bottomRight, square.centerBottom, square.centerLeft);
+                    break;
+                case 12:
+                    MeshFromPoints(square.topLeft, square.topRight, square.centerRight, 
+                        square.centerLeft);
+                    break;
+                    
+                // 3 points selected
+                case 7:
+                    MeshFromPoints(square.centerTop, square.topRight, square.bottomRight, 
+                        square.bottomLeft, square.centerLeft);
+                    break;
+                case 11:
+                    MeshFromPoints(square.topLeft, square.centerTop, square.centerRight, 
+                        square.bottomRight, square.bottomLeft);
+                    break;
+                case 13:
+                    MeshFromPoints(square.topLeft, square.topRight, square.centerRight, 
+                        square.centerBottom, square.bottomLeft);
+                    break;
+                case 14:
+                    MeshFromPoints(square.topLeft, square.topRight, square.bottomRight, 
+                        square.centerBottom, square.centerLeft);
+                    break;
+                    
+                // All 4 points selected
+                case 15:
+                    MeshFromPoints(square.topLeft, square.topRight, square.bottomRight, 
+                        square.bottomLeft);
+                    break;
+            }   
+        }
+        
+        void MeshFromPoints(params Node[] points)
+        {
+            AssignVerticies(points);
+            
+            for(int i = 2; i < points.Length; i++)
+            {
+                CreateTriangle(points[0], points[i - 1], points[i]);
+            }
+        }
+        
+        void AssignVerticies(Node[] points)
+        {
+            for(int i = 0; i < points.Length; i++)
+            {
+                if(points[i].vertexIndex == -1)
+                {
+                    points[i].vertexIndex = vertices.Count;
+                    vertices.Add(points[i].position);
+                }
+            }
+        } 
+        
+        void CreateTriangle(Node a, Node b, Node c)
+        {
+            triangles.Add(a.vertexIndex);
+            triangles.Add(b.vertexIndex);
+            triangles.Add(c.vertexIndex);
+        }
         
         public void OnDrawGizmos()
         {
@@ -91,7 +222,7 @@ namespace LevelGeneration
                     for(int y = 0; y < yDimension - 1; y++)
                     {
                         squares[x,y] = new Square(controlNodes[x, y+1], controlNodes[x + 1, y + 1], 
-                            controlNodes[x + 1, y], controlNodes[x, y]);
+                            controlNodes[x, y], controlNodes[x + 1, y]);
                     }
                 }
             }
@@ -101,6 +232,7 @@ namespace LevelGeneration
         {
             public ControlNode topLeft, topRight, bottomLeft, bottomRight;
             public Node centerTop, centerLeft, centerRight, centerBottom;
+            public int configuration;
             
             public Square(ControlNode topLeft, ControlNode topRight, ControlNode bottomLeft, 
                 ControlNode bottomRight)
@@ -114,12 +246,33 @@ namespace LevelGeneration
                 centerLeft = bottomLeft.topNode;
                 centerRight = bottomRight.topNode;
                 centerBottom = bottomLeft.rightNode;
+                
+                if(topLeft.active)
+                {
+                    configuration += 8;
+                }
+                
+                if(topRight.active)
+                {
+                    configuration += 4;
+                }
+                
+                if(bottomRight.active)
+                {
+                    configuration += 2;
+                }
+                
+                if(bottomLeft.active)
+                {
+                    configuration += 1;
+                }
             }
         }
+        
         public class Node
         {
             public Vector3 position;
-            public int index = -1;
+            public int vertexIndex = -1;
             
             public Node(Vector3 position)
             {
