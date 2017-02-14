@@ -28,6 +28,8 @@ namespace LevelGeneration
         HashSet<int> checkedVertices = new HashSet<int>();
         
         public MeshFilter walls;
+        public MeshFilter cave;
+        public bool is2D = false;
         
         #if UNITY_EDITOR
         [SerializeField] private bool showGizmos = true;
@@ -52,13 +54,34 @@ namespace LevelGeneration
             }
             
             Mesh mesh = new Mesh();
-            GetComponent<MeshFilter>().mesh = mesh;
+            cave.mesh = mesh;
             
             mesh.vertices = vertices.ToArray();
             mesh.triangles = triangles.ToArray();
             mesh.RecalculateNormals();
             
-            CreateWallMesh();
+            Vector2[] uVMap = new Vector2[vertices.Count];
+            int tileCount = 10;
+            
+            for(int i = 0; i < uVMap.Length; i++)
+            {
+                float percentX = Mathf.InverseLerp(-map.GetLength(0) / 2 * squareSize, 
+                    map.GetLength(0) / 2 * squareSize, vertices[i].x) * tileCount;
+                float percentY = Mathf.InverseLerp(-map.GetLength(0) / 2 * squareSize, 
+                    map.GetLength(0) / 2 * squareSize, vertices[i].z) * tileCount;
+                uVMap[i] = new Vector2(percentX, percentY);
+            }
+            
+            mesh.uv = uVMap;
+            
+            if(!is2D)
+            {
+                CreateWallMesh();
+            }
+            else
+            {
+                CreateWallColliders();
+            }
         }
         
         void CreateWallMesh()
@@ -92,6 +115,34 @@ namespace LevelGeneration
             wallMesh.triangles = wallTriangles.ToArray();
             
             walls.mesh = wallMesh;
+            
+            MeshCollider wallCollider = walls.gameObject.AddComponent<MeshCollider>();
+            wallCollider.sharedMesh = wallMesh;
+        }
+        
+        void CreateWallColliders()
+        {
+            EdgeCollider2D[] currentEdgeColliders = gameObject.GetComponents<EdgeCollider2D>();
+            
+            for(int i = 0; i < currentEdgeColliders.Length; i++)
+            {
+                Destroy(currentEdgeColliders[i]);
+            }
+            
+            CalculateMeshOutlines();
+            
+            foreach(List<int> outline in outlines)
+            {
+                EdgeCollider2D edgeCollider = gameObject.AddComponent<EdgeCollider2D>();
+                Vector2[] edgePoints = new Vector2[outline.Count];
+                
+                for(int i = 0; i < outline.Count; i++)
+                {
+                    edgePoints[i] = new Vector2(vertices[outline[i]].x, vertices[outline[i]].z);
+                }
+                
+                edgeCollider.points = edgePoints;
+            }
         }
         
         void TriangulateSquare(Square square)

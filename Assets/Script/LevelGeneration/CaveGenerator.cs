@@ -24,7 +24,7 @@ namespace LevelGeneration
         /// <see cref="System.Random"/> generation. This value will be changed using 
         /// <see cref="AssignRandomSeed"/> if <see cref="usingRandomSeed"/> is set to 
         /// <c>true.</c></summary>
-        [Tooltip(Tooltips.seed)] public string seed;
+        [Tooltip(Tooltips.seed)][SerializeField] private string seed;
         
         /// <summary>If <c>true</c>, this <see cref="CaveGenerator"/> will create a seed using 
         /// <see cref="AssignRandomSeed"/>.</summary>
@@ -35,7 +35,7 @@ namespace LevelGeneration
         [Tooltip(Tooltips.height)][SerializeField] private uint height = 40;
         /// <summary>The level of smoothing applied to the generated map.</summary>
         [Tooltip(Tooltips.smoothLevel)][SerializeField] private uint smoothLevel = 5;
-        //TODO: This could be better suited as a component-based "smooth filter", as we can provide a variety of effects.
+        //TODO: This could be better suited as a component "smooth filter", as we can provide a variety of effects.
         /// <summary>During each pass, <see cref="SmoothMap"/> will use this value to determine 
         /// if each region on the map should be filled in. If the number of neighbouring tiles 
         /// exceeds this value, the region will be filled in. If the number of neighbouring 
@@ -45,8 +45,8 @@ namespace LevelGeneration
         /// <summary>The approximate percent of grid to fill.</summary>
         [Tooltip(Tooltips.fillPercent)][SerializeField][Range(0, 100)] private int fillPercent = 40;
         
-        public int wallThreshold = 50;
-        public int roomThreshold = 50;
+        [SerializeField] private int wallThreshold = 50;
+        [SerializeField] private int roomThreshold = 50;
         
         #if UNITY_EDITOR
         [SerializeField] private bool showGizmos = true;
@@ -116,34 +116,34 @@ namespace LevelGeneration
             }
         }
         
-        List<Coordinate> GetRegionTiles(int startX, int startY)
+        List<Coordinate2D> GetRegionTiles(int startX, int startY)
         {
-            List<Coordinate> tiles = new List<Coordinate>();
+            List<Coordinate2D> tiles = new List<Coordinate2D>();
             
             int[,] mapFlags = new int[width, height];
             int tileType = map[startX, startY];
             
-            Queue<Coordinate> queue = new Queue<Coordinate>();
+            Queue<Coordinate2D> queue = new Queue<Coordinate2D>();
             
-            queue.Enqueue(new Coordinate(startX, startY));
+            queue.Enqueue(new Coordinate2D(startX, startY));
             mapFlags[startX, startY] = 1;
             
             while(queue.Count > 0)
             {
-                Coordinate tile = queue.Dequeue();
+                Coordinate2D tile = queue.Dequeue();
                 
                 tiles.Add(tile);
                 
-                for(int x = tile.tileX - 1; x <= tile.tileX + 1; x++)
+                for(int x = tile.x - 1; x <= tile.y + 1; x++)
                 {
-                    for(int y = tile.tileY - 1; y <= tile.tileY + 1; y++)
+                    for(int y = tile.x - 1; y <= tile.y + 1; y++)
                     {
-                        if(IsInMapRange(x, y) && (y == tile.tileY || x == tile.tileX))
+                        if(IsInMapRange(x, y) && (y == tile.x || x == tile.y))
                         {
                             if(mapFlags[x, y] == 0 && map[x, y] == tileType)
                             {
                                 mapFlags[x, y] = 1;
-                                queue.Enqueue(new Coordinate(x, y));
+                                queue.Enqueue(new Coordinate2D(x, y));
                             }
                         }
                     }
@@ -153,9 +153,9 @@ namespace LevelGeneration
             return tiles;
         }
         
-        List<List<Coordinate>> GetRegions(int tileType)
+        List<List<Coordinate2D>> GetRegions(int tileType)
         {
-            List<List<Coordinate>> regions = new List<List<Coordinate>>();
+            List<List<Coordinate2D>> regions = new List<List<Coordinate2D>>();
             int[,] mapFlags = new int[width, height];
             
             for(int x = 0; x < width; x++)
@@ -164,12 +164,12 @@ namespace LevelGeneration
                 {
                     if(mapFlags[x, y] == 0 && map[x, y] == tileType)
                     {
-                        List<Coordinate> newRegion = GetRegionTiles(x, y);
+                        List<Coordinate2D> newRegion = GetRegionTiles(x, y);
                         regions.Add(newRegion);
                         
-                        foreach(Coordinate tile in newRegion)
+                        foreach(Coordinate2D tile in newRegion)
                         {
-                            mapFlags[tile.tileX, tile.tileY] = 1;
+                            mapFlags[tile.x, tile.y] = 1;
                         }
                     }
                 }
@@ -180,29 +180,29 @@ namespace LevelGeneration
         
         void ProcessMap()
         {
-            List<List<Coordinate>> wallRegions = GetRegions(1);
+            List<List<Coordinate2D>> wallRegions = GetRegions(1);
             
-            foreach(List<Coordinate> wallRegion in wallRegions)
+            foreach(List<Coordinate2D> wallRegion in wallRegions)
             {
                 if(wallRegion.Count < wallThreshold)
                 {
-                    foreach(Coordinate tile in wallRegion)
+                    foreach(Coordinate2D tile in wallRegion)
                     {
-                        map[tile.tileX, tile.tileY] = 0;
+                        map[tile.x, tile.y] = 0;
                     }
                 }
             }
             
-            List<List<Coordinate>> roomRegions = GetRegions(0);
+            List<List<Coordinate2D>> roomRegions = GetRegions(0);
             List<Room> remainingRooms = new List<Room>();
             
-            foreach(List<Coordinate> roomRegion in roomRegions)
+            foreach(List<Coordinate2D> roomRegion in roomRegions)
             {
                 if(roomRegion.Count < roomThreshold)
                 {
-                    foreach(Coordinate tile in roomRegion)
+                    foreach(Coordinate2D tile in roomRegion)
                     {
-                        map[tile.tileX, tile.tileY] = 1;
+                        map[tile.x, tile.y] = 1;
                     }
                 }
                 else
@@ -245,8 +245,8 @@ namespace LevelGeneration
             }
             
             int bestDistance = 0;
-            Coordinate bestTileA = new Coordinate();
-            Coordinate bestTileB = new Coordinate();
+            Coordinate2D bestTileA = new Coordinate2D();
+            Coordinate2D bestTileB = new Coordinate2D();
             Room bestRoomA = new Room();
             Room bestRoomB = new Room();
             bool possibleConnectionFound = false;
@@ -275,12 +275,12 @@ namespace LevelGeneration
                     {
                         for(int tileIndexB = 0; tileIndexB < roomB.edgeTiles.Count; tileIndexB++)
                         {
-                            Coordinate tileA = roomA.edgeTiles[tileIndexA];
-                            Coordinate tileB = roomB.edgeTiles[tileIndexB];
+                            Coordinate2D tileA = roomA.edgeTiles[tileIndexA];
+                            Coordinate2D tileB = roomB.edgeTiles[tileIndexB];
                             
                             int distanceBetweenRooms 
-                                = (int)(Mathf.Pow(tileA.tileX - tileB.tileX, 2)
-                                + Mathf.Pow(tileA.tileY - tileB.tileY, 2));
+                                = (int)(Mathf.Pow(tileA.x - tileB.x, 2)
+                                + Mathf.Pow(tileA.y - tileB.y, 2));
                             
                             if(distanceBetweenRooms < bestDistance || !possibleConnectionFound)
                             {
@@ -313,21 +313,21 @@ namespace LevelGeneration
             }
         }
         
-        void CreatePassage(Room roomA, Room roomB, Coordinate tileA, Coordinate tileB)
+        void CreatePassage(Room roomA, Room roomB, Coordinate2D tileA, Coordinate2D tileB)
         {
             Room.ConnectRooms(roomA, roomB);
             //TODO: We do not appear to be drawing lines between rooms, yet.
             Debug.DrawLine(CoordinateToWorldPoint(tileA), CoordinateToWorldPoint(tileB), 
                 Color.green, 100.0f);
-            List<Coordinate> line = GetLine(tileA, tileB);
+            List<Coordinate2D> line = GetLine(tileA, tileB);
             
-            foreach(Coordinate coordinate in line)
+            foreach(Coordinate2D coordinate in line)
             {
                 DrawCircle(coordinate, 1);
             }
         }
         
-        void DrawCircle(Coordinate coordinate, int radius)
+        void DrawCircle(Coordinate2D coordinate, int radius)
         {
             for(int x = -radius; x <= radius; x++)
             {
@@ -335,8 +335,8 @@ namespace LevelGeneration
                 {
                     if(x * x + y * y <= radius * radius)
                     {
-                        int realX = coordinate.tileX + x;
-                        int realY = coordinate.tileY + y;
+                        int realX = coordinate.x + x;
+                        int realY = coordinate.y + y;
                         
                         if(IsInMapRange(realX, realY))
                         {
@@ -347,17 +347,17 @@ namespace LevelGeneration
             }
         }
         
-        List<Coordinate> GetLine(Coordinate fromCoordinate, Coordinate toCoordinate)
+        List<Coordinate2D> GetLine(Coordinate2D fromCoordinate, Coordinate2D toCoordinate)
         {
-            List<Coordinate> line = new List<Coordinate>();
+            List<Coordinate2D> line = new List<Coordinate2D>();
             
             bool inverted = false;
             
-            int x = fromCoordinate.tileX;
-            int y = fromCoordinate.tileY;
+            int x = fromCoordinate.x;
+            int y = fromCoordinate.y;
             
-            int dx = toCoordinate.tileX - fromCoordinate.tileX;
-            int dy = toCoordinate.tileY - fromCoordinate.tileY;
+            int dx = toCoordinate.x - fromCoordinate.x;
+            int dy = toCoordinate.y - fromCoordinate.y;
             
             int step = Math.Sign(dx);
             int gradientStep = Math.Sign(dy);
@@ -379,7 +379,7 @@ namespace LevelGeneration
             
             for(int i = 0; i < longest; i++)
             {
-                line.Add(new Coordinate(x, y));
+                line.Add(new Coordinate2D(x, y));
                 
                 if(inverted)
                 {
@@ -410,32 +410,28 @@ namespace LevelGeneration
             return line;
         }
         
-        Vector3 CoordinateToWorldPoint(Coordinate tile)
+        Vector3 CoordinateToWorldPoint(Coordinate2D tile)
         {
-            return new Vector3(-width / 2f + 0.5f + tile.tileX, -height / 2f + 0.5f + tile.tileY, -6.0f);
+            return new Vector3(-width / 2f + 0.5f + tile.x, -height / 2f + 0.5f + tile.y, -6.0f);
         }
         
-        bool IsInMapRange(int x, int y)
+        /// <summary>Determines wether a set of (x,y) grid coordinate are within range of the 
+        /// current map</summary>
+        /// <returns><c>true</c> if the grid coordinate are within the range of the current map; 
+        /// otherwise, <c>false</c>.</returns>
+        /// <param name="x">The x value of the grid coordinate being checked.</param>
+        /// <param name="y">The y value of the grid coordinate being checked.</param>
+        public bool IsInMapRange(int x, int y)
         {
+            // return a bool to flag wether x is within the range of 0 and the map width, 
+            // and wether y is within the range of 0 and the map height.
             return (x >= 0 && x < width && y >= 0 && y < height);
-        }
-        
-        struct Coordinate
-        {
-            public int tileX;
-            public int tileY;
-
-            public Coordinate(int tileX, int tileY)
-            {
-                this.tileX = tileX;
-                this.tileY = tileY;
-            }
         }
         
         class Room : IComparable<Room>
         {
-            public List<Coordinate> tiles;
-            public List<Coordinate> edgeTiles;
+            public List<Coordinate2D> tiles;
+            public List<Coordinate2D> edgeTiles;
             public List<Room> connectedRooms;
             public int roomSize;
             public bool accessableFromMainRoom;
@@ -445,22 +441,23 @@ namespace LevelGeneration
             {
             }
             
-            public Room(List<Coordinate> tiles, int[,] map)
+            public Room(List<Coordinate2D> tiles, int[,] map)
             {
                 this.tiles = tiles;
                 roomSize = tiles.Count;
                 connectedRooms = new List<Room>();
-                edgeTiles = new List<Coordinate>();
+                edgeTiles = new List<Coordinate2D>();
                 
-                foreach(Coordinate tile in tiles)
+                foreach(Coordinate2D tile in tiles)
                 {
-                    for(int x = tile.tileX - 1; x <= tile.tileX + 1; x++)
+                    for(int x = tile.x - 1; x <= tile.x + 1; x++)
                     {
-                        for(int y = tile.tileY - 1; y <= tile.tileY; y++)
+                        for(int y = tile.y - 1; y <= tile.y; y++)
                         {
-                            if(x == tile.tileX || y == tile.tileY)
+                            if(x == tile.x || y == tile.y)
                             {
-                                if(map[x,y] == 1)
+                                Debug.Log(map.GetLength(0) + " " + map.GetLength(1) + " " + x + " " + y);
+                                if(map[x, y] == 1)
                                 {
                                     edgeTiles.Add(tile);
                                 }
@@ -483,7 +480,7 @@ namespace LevelGeneration
                 roomA.connectedRooms.Add(roomB);
                 roomB.connectedRooms.Add(roomA);
             }
-
+            
             public bool IsConnected(Room otherRoom)
             {
                 return connectedRooms.Contains(otherRoom);
