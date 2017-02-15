@@ -82,12 +82,6 @@ public class SecurityCamera : MonoBehaviour
 					{
 					}
 		 }
-    
-    void OnDestroy()
-    {
-        Debug.Log("destroy sub");
-    }
-    
 
 		 void OnTriggerEnter(Collider otherCollider)
 		 {

@@ -7,6 +7,7 @@ using UnityEngine;
 namespace LevelGeneration
 {
     using LogError = Utility.LevelGenerationErrors;
+    using StringFormat = Utility.StringFormats;
     
     /// <summary>Represents a grid coordinate in 2D space.</summary>
     public struct Coordinate2D
@@ -73,6 +74,11 @@ namespace LevelGeneration
                         break;
                 }
             }
+        }
+        
+        public override string ToString()
+        {
+            return string.Format(StringFormat.Coordinate2D, x, y);
         }
     }
     
@@ -144,6 +150,11 @@ namespace LevelGeneration
                 }
             }
         }
+        
+        public override string ToString()
+        {
+            return string.Format(StringFormat.Coordinate3D, x, y, z);
+        }
     }
 }
 
@@ -158,5 +169,11 @@ namespace LevelGeneration.Utility
         {
             Debug.Log(coordinateIndexOutOfBoundsError + index);
         }
+    }
+    
+    public static class StringFormats
+    {
+        public const string Coordinate2D = "Coordinate2D ({0}, {1})";
+        public const string Coordinate3D = "Coordinate3D ({0}, {1}, {2})";
     }
 }
