@@ -24,26 +24,26 @@ namespace LevelGeneration
         /// <see cref="System.Random"/> generation. This value will be changed using 
         /// <see cref="AssignRandomSeed"/> if <see cref="usingRandomSeed"/> is set to 
         /// <c>true.</c></summary>
-        [Tooltip(Tooltips.seed)][SerializeField] private string seed;
+        [SerializeField][Tooltip(Tooltips.seed)] private string seed;
 
         /// <summary>If <c>true</c>, this <see cref="CaveGenerator"/> will create a seed using 
         /// <see cref="AssignRandomSeed"/>.</summary>
-        [Tooltip(Tooltips.usingRandomSeed)][SerializeField] private bool usingRandomSeed = true;
+        [SerializeField][Tooltip(Tooltips.usingRandomSeed)] private bool usingRandomSeed = true;
         /// <summary>The width of the map, in grid dimension.</summary>
-        [Tooltip(Tooltips.width)][SerializeField] private uint width = 40;
+        [SerializeField][Tooltip(Tooltips.width)] private uint width = 40;
         /// <summary>The height of the map, in grid dimension.</summary>
-        [Tooltip(Tooltips.height)][SerializeField] private uint height = 40;
+        [SerializeField][Tooltip(Tooltips.height)] private uint height = 40;
         /// <summary>The level of smoothing applied to the generated map.</summary>
-        [Tooltip(Tooltips.smoothLevel)][SerializeField] private uint smoothLevel = 5;
+        [SerializeField][Tooltip(Tooltips.smoothLevel)] private uint smoothLevel = 5;
         //TODO: This could be better suited as a component "smooth filter", as we can provide a variety of effects.
         /// <summary>During each pass, <see cref="SmoothMap"/> will use this value to determine 
         /// if each region on the map should be filled in. If the number of neighbouring tiles 
         /// exceeds this value, the region will be filled in. If the number of neighbouring 
         /// tiles is less than this number, the tile will be made empty. If the numbers match, 
         /// the tile will be left as it is.</summary>
-        [Tooltip(Tooltips.wallBleed)][SerializeField][Range(0, 8)] private int wallBleed = 4;
+        [SerializeField][Tooltip(Tooltips.wallBleed)][Range(0, 8)] private int wallBleed = 4;
         /// <summary>The approximate percent of grid to fill.</summary>
-        [Tooltip(Tooltips.fillPercent)][SerializeField][Range(0, 100)] private int fillPercent = 40;
+        [SerializeField][Tooltip(Tooltips.fillPercent)][Range(0, 100)] private int fillPercent = 40;
 
         [SerializeField] private int wallThreshold = 50;
         [SerializeField] private int roomThreshold = 50;
@@ -316,9 +316,7 @@ namespace LevelGeneration
         void CreatePassage(Room roomA, Room roomB, Coordinate2D tileA, Coordinate2D tileB)
         {
             Room.ConnectRooms(roomA, roomB);
-            //TODO: We do not appear to be drawing lines between rooms, yet.
-            Debug.DrawLine(CoordinateToWorldPoint(tileA), CoordinateToWorldPoint(tileB), 
-                Color.green, 100.0f);
+            
             List<Coordinate2D> line = GetLine(tileA, tileB);
 
             foreach(Coordinate2D coordinate in line)

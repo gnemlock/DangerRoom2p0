@@ -6,8 +6,8 @@ using UnityEngine;
 
 namespace LevelGeneration
 {
-    using LogError = Utility.LevelGenerationErrors;
-    using StringFormat = Utility.StringFormats;
+    using Log = Utility.LevelGenerationDebug;
+    using StringFormat = Utility.LevelGenerationStringFormats;
     
     /// <summary>Represents a grid coordinate in 2D space.</summary>
     public struct Coordinate2D
@@ -55,7 +55,7 @@ namespace LevelGeneration
                         return y;
                         break;
                     default:
-                        LogError.CoordinateIndexOutOfBounds(i);
+                        Log.CoordinateIndexOutOfBounds(i);
                         return 0;
                 }
             }
@@ -70,7 +70,7 @@ namespace LevelGeneration
                         y = value;
                         break;
                     default:
-                        LogError.CoordinateIndexOutOfBounds(i);
+                        Log.CoordinateIndexOutOfBounds(i);
                         break;
                 }
             }
@@ -127,7 +127,7 @@ namespace LevelGeneration
                         return z;
                         break;
                     default:
-                        LogError.CoordinateIndexOutOfBounds(i);
+                        Log.CoordinateIndexOutOfBounds(i);
                         return 0;
                 }
             }
@@ -145,7 +145,7 @@ namespace LevelGeneration
                         z = value;
                         break;
                     default:
-                        LogError.CoordinateIndexOutOfBounds(i);
+                        Log.CoordinateIndexOutOfBounds(i);
                         break;
                 }
             }
@@ -160,10 +160,10 @@ namespace LevelGeneration
 
 namespace LevelGeneration.Utility
 {
-    public static class LevelGenerationErrors
+    public static partial class LevelGenerationDebug
     {
-        private const string coordinateIndexOutOfBoundsError = "Warning: Trying to access " + 
-            "coordinate with index outside of array bounds: ";
+        private const string coordinateIndexOutOfBoundsError = "Error: Trying to access " 
+            + "coordinate with index outside of array bounds: ";
         
         public static void CoordinateIndexOutOfBounds(int index)
         {
@@ -171,7 +171,7 @@ namespace LevelGeneration.Utility
         }
     }
     
-    public static class StringFormats
+    public static partial class LevelGenerationStringFormats
     {
         public const string Coordinate2D = "Coordinate2D ({0}, {1})";
         public const string Coordinate3D = "Coordinate3D ({0}, {1}, {2})";
