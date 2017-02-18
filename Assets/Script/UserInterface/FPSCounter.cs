@@ -64,6 +64,13 @@ namespace UserInterface
         private int[] frameRateBuffer;
         /// <summary>The current index position in the <see cref="frameRateBuffer"/>.</summary>
         private int bufferIndex;
+        /// <summary>Is the <see cref="FPSCounter"/> displaying it's values to 
+        /// <see cref="UnityEngine.UI.Text"/> components?</summary>
+        /// <remarks>This is a simple alternative to constantly checking if the 
+        /// <see cref="UnityEngine.UI.Text"/> components are <c>null</c>. By setting this value to 
+        /// <c>false</c>, the <see cref="FPSCounter"/> will still calculate frame rates, but will 
+        /// not attempt to push the values to a display.</remarks>  
+        [SerializeField][Tooltip(Tooltips.displayToText)] private bool displayToText = true;
         
         /// <summary>Pre-created strings for all possible values, ranging from 00 to 99.</summary>
         /// <remarks>The frame rate labels will only display values between 0 and 99, so all 
@@ -81,6 +88,108 @@ namespace UserInterface
             "98", "99"
         };
         
+        #region Constructors
+        /// <summary>Initializes a new instance of the <see cref="UserInterface.FPSCounter"/> class 
+        /// to display frame rate values with no colour transition. Note that this class is a 
+        /// singleton; as such, additional instances will be quickly removed, without 
+        /// enabling the override.</summary>
+        /// <param name="highestFPSLabel">The text box for displaying the highest FPS value.</param>
+        /// <param name="averageFPSLabel">The text box for displaying the average FPS value.</param>
+        /// <param name="lowestFPSLabel">The text box for displaying the lowest FPS value.</param>
+        /// <param name="frameRange">The number of recent frames to keep record of.</param>
+        /// <param name="overrideOriginal">If set to <c>true</c>, the created 
+        /// <see cref="UserInterface.FPSCounter"/> will override any existing instance, preventing 
+        /// this instance from being deleted as a singleton class.</param>
+        public FPSCounter(Text highestFPSLabel, Text averageFPSLabel, Text lowestFPSLabel, 
+            int frameRange = 60, bool overrideOriginal = false)
+        {
+            if(overrideOriginal && instance != null)
+            {
+                // If we are overriding the original FPSCounter, and we already have an instance 
+                // of FPSCounter, destroy the older instance and set the instance reference to
+                // null, so the Awake() method reset the instance reference.
+                Destroy(instance);
+                instance = null;
+            }
+            
+            // Set the passed in parameters.
+            this.highestFPSLabel = highestFPSLabel;
+            this.averageFPSLabel = averageFPSLabel;
+            this.lowestFPSLabel = lowestFPSLabel;
+            this.frameRange = frameRange;
+            
+            // We are displaying, as we have Text references.
+            displayToText = true;
+            
+            // Set a default colour, so all values display in white.
+            colourRange = new IntColour[] { new IntColour(Color.white, 0) };
+        }
+        
+        /// <summary>Initializes a new instance of the <see cref="UserInterface.FPSCounter"/> class 
+        /// to display frame rate values with colour transition. Note that this class is a 
+        /// singleton; as such, additional instances will be quickly removed, without 
+        /// enabling the override.</summary>
+        /// <param name="highestFPSLabel">The text box for displaying the highest FPS value.</param>
+        /// <param name="averageFPSLabel">The text box for displaying the average FPS value.</param>
+        /// <param name="lowestFPSLabel">The text box for displaying the lowest FPS value.</param>
+        /// <param name="colourRange">The <see cref="UserInterface.IntColour"/> range used to 
+        /// colour the values. This class will use minimum values, so each set should contain the 
+        /// minimum desired value to reflect the corresponding colour.</param>
+        /// <param name="frameRange">The number of recent frames to keep record of.</param>
+        /// <param name="overrideOriginal">If set to <c>true</c>, the created 
+        /// <see cref="UserInterface.FPSCounter"/> will override any existing instance, preventing 
+        /// this instance from being deleted as a singleton class.</param>
+        public FPSCounter(Text highestFPSLabel, Text averageFPSLabel, Text lowestFPSLabel, 
+            IntColour[] colourRange, int frameRange = 60, bool overrideOriginal = false)
+        {
+            if(overrideOriginal && instance != null)
+            {
+                // If we are overriding the original FPSCounter, and we already have an instance 
+                // of FPSCounter, destroy the older instance and set the instance reference to
+                // null, so the Awake() method reset the instance reference.
+                Destroy(instance);
+                instance = null;
+            }
+            
+            // Set the passed in parameters.
+            this.highestFPSLabel = highestFPSLabel;
+            this.averageFPSLabel = averageFPSLabel;
+            this.lowestFPSLabel = lowestFPSLabel;
+            this.frameRange = frameRange;
+            this.colourRange = colourRange;
+            
+            // We are displaying, as we have Text references.
+            displayToText = true;
+        }
+        
+        /// <summary>Initializes a new instance of the <see cref="UserInterface.FPSCounter"/> class 
+        /// to simply keep record of the current frame rate, without display. Note that this class 
+        /// is a singleton; as such, additional instances will be quickly removed, without 
+        /// enabling the override.</summary>
+        /// <param name="frameRange">The number of recent frames to keep record of.</param>
+        /// <param name="overrideOriginal">If set to <c>true</c>, the created 
+        /// <see cref="UserInterface.FPSCounter"/> will override any existing instance, preventing 
+        /// this instance from being deleted as a singleton class.</param>
+        public FPSCounter(int frameRange = 60, bool overrideOriginal = false)
+        {
+            if(overrideOriginal && instance != null)
+            {
+                // If we are overriding the original FPSCounter, and we already have an instance 
+                // of FPSCounter, destroy the older instance and set the instance reference to
+                // null, so the Awake() method reset the instance reference.
+                Destroy(instance);
+                instance = null;
+            }
+            
+            // Set the passed in parameter.
+            this.frameRange = frameRange;
+            
+            // We are not displaying, as we have no Text references.
+            displayToText = false;
+        }
+        #endregion
+        
+        #region MonoBehaviour Events and Parent Overrides
         /// <summary>This method is called when the instance is loaded.</summary>
         private void Awake()
         {
@@ -114,11 +223,14 @@ namespace UserInterface
             UpdateFrameRateBuffer();
             CalculateFPS();
             
-            //TODO: TEXT IS NOT BEING UPDATED TO TEXT COMPONENTS - TEXT RESETS TO "" ON LOAD
-            // Update the new FPS values to the corresponding labels.
-            DisplayFPS(highestFPSLabel, highestFrameRate);
-            DisplayFPS(averageFPSLabel, averageFrameRate);
-            DisplayFPS(lowestFPSLabel, lowestFrameRate);
+            if(displayToText)
+            {
+                // If we are to display the values, update the new FPS values to the corresponding 
+                // text boxes.
+                DisplayFPS(highestFPSLabel, highestFrameRate);
+                DisplayFPS(averageFPSLabel, averageFrameRate);
+                DisplayFPS(lowestFPSLabel, lowestFrameRate);
+            }
         }
         
         /// <summary>Returns a preformated string containing <see cref="lowestFrameRate"/>, 
@@ -130,6 +242,7 @@ namespace UserInterface
             return string.Format(StringFormat.FPSCounter, highestFrameRate, averageFrameRate, 
                 lowestFrameRate);
         }
+        #endregion
         
         /// <summary>Updates <see cref="lowestFrameRate"/>, <see cref="highestFrameRate"/> and 
         /// <see cref="averageFrameRate"/> based off the current set of values in 
@@ -153,10 +266,11 @@ namespace UserInterface
                     // set this frame rate as the new highest frame rate placeholder.
                     highest = frameRate;
                 }
-                else if(frameRate < lowest)
+                else if(frameRate < lowest && frameRate != 0)
                 {
                     // Else, if the frame rate is lower than the current lowest frame rate 
-                    // placeholder, set this frame rate as the new lowest frame rate placeholder.
+                    // placeholder, and not a default value of 0, set this frame rate as the new 
+                    // lowest frame rate placeholder.
                     lowest = frameRate;
                 }
             }
@@ -179,7 +293,7 @@ namespace UserInterface
             // clamped between 0 and 99.
             fpsLabel.text = stringsFrom00To99[Mathf.Clamp(fpsValue, 0, 99)];
             
-            for(int i = 0; i < colourRange.Length; i++)
+           for(int i = 0; i < colourRange.Length; i++)
             {
                 if(fpsValue >= colourRange[i].value)
                 {
@@ -208,6 +322,16 @@ namespace UserInterface
             // reset the buffer index to 0.
             frameRateBuffer = new int[frameRange];
             bufferIndex = 0;
+        }
+        
+        /// <summary>Determines wether the <see cref="FPSCounter"/> is displaying to a 
+        /// <see cref="UnityEngine.UI.Text"/> interface, or only calculating the frame rate.
+        /// </summary>
+        /// <returns><c>true</c> if the <see cref="FPSCounter"/> is displaying; otherwise, 
+        /// <c>false</c>.</returns>
+        public bool IsDisplayingToInterface()
+        {
+            return displayToText;
         }
         
         /// <summary>Updates the <see cref="frameRateBuffer"/> array with a new frame rate reading, 
@@ -267,6 +391,8 @@ namespace UserInterface.Utility
             + "in order to determine average values";
         public const string colourRange = "Colour and minimum value sets, used to colour code "
             + "the GUI text output.";
+        public const string displayToText = "Is this FPSCounter displaying its values to "
+            + "GUI Text fields?";
         #endif
     }
 }
