@@ -10,6 +10,23 @@ namespace DataStructures
     public class PooledObject : MonoBehaviour 
     {
         public ObjectPool objectPool { get; set; }
+
+        [System.NonSerialized] private ObjectPool poolInstanceForPrefab;
+        
+        protected void OnLevelWasLoaded()
+        {
+            ReturnToPool();
+        }
+        
+        public T GetPooledInstance<T>() where T : PooledObject
+        {
+            if(!poolInstanceForPrefab)
+            {
+                poolInstanceForPrefab = ObjectPool.GetPool(this);
+            }
+            
+            return (T)poolInstanceForPrefab.GetObject();
+        }
         
         public void ReturnToPool()
         {

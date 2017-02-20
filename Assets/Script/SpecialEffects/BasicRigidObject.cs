@@ -29,7 +29,7 @@ namespace SpecialEffects
             {
                 ReturnToPool();
             }
-                 }
+        }
         
         public void SetMaterial(Material material)
         {

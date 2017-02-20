@@ -4,49 +4,80 @@
  */
 
 using UnityEngine;
-using System.Collections.Generic;
 
 namespace DataStructures
 {
+    using System.Collections.Generic;
+    using Labels = Utility.ObjectPoolLabels;
+    
     public class ObjectPool : MonoBehaviour 
     {
-        PooledObject pooledObjectPrefab;
-        
-        [System.NonSerialized] ObjectPool poolInstanceForPrefab;
+        private PooledObject pooledObjectPrefab;
+        private List<PooledObject> availableObjects = new List<PooledObject>();
         
         public PooledObject GetObject()
         {
-            PooledObject pooledObject = Instantiate<PooledObject>(pooledObjectPrefab);
+            PooledObject pooledObject;
+            int lastAvailableIndex = availableObjects.Count - 1;
             
-            pooledObject.transform.SetParent(transform, false);
-            pooledObject.objectPool = this;
+            if(lastAvailableIndex >= 0)
+            {
+                pooledObject = availableObjects[lastAvailableIndex];
+                availableObjects.RemoveAt(lastAvailableIndex);
+                pooledObject.gameObject.SetActive(true);
+            }
+            else
+            {
+                pooledObject = Instantiate<PooledObject>(pooledObjectPrefab);
+                pooledObject.transform.SetParent(transform, false);
+                pooledObject.objectPool = this;
+            }
             
             return pooledObject;
         }
         
-        public T GetPooledInstance<T>() where T : PooledObject
-        {
-            if(!poolInstanceForPrefab)
-            {
-                poolInstanceForPrefab = ObjectPool.GetPool(this);
-            }
-            
-            return (T)poolInstanceForPrefab.GetObject();
-        }
-        
         public void AddObject(PooledObject pooledObject)
         {
-            Object.Destroy(pooledObject);
+            pooledObject.gameObject.SetActive(false);
+            availableObjects.Add(pooledObject);
         }
         
         public static ObjectPool GetPool(PooledObject pooledObjectPrefab)
         {
-            GameObject objectPoolGameObject 
-                = new GameObject(pooledObjectPrefab.name + "Pool");
-            ObjectPool objectPool = objectPoolGameObject.AddComponent<ObjectPool>();
+            GameObject objectPoolGameObject;
+            ObjectPool objectPool;
             
+            #if UNITY_EDITOR
+            objectPoolGameObject = GameObject.Find(pooledObjectPrefab.name + Labels.objectPool);
+            
+            if(objectPoolGameObject)
+            {
+                objectPool = objectPoolGameObject.GetComponent<ObjectPool>();
+                
+                if(objectPool)
+                {
+                    return objectPool;
+                }
+            }
+            #endif
+            
+            objectPoolGameObject = new GameObject(pooledObjectPrefab.name + Labels.objectPool);
+            DontDestroyOnLoad(objectPoolGameObject);
+            objectPool = objectPoolGameObject.AddComponent<ObjectPool>();
             objectPool.pooledObjectPrefab = pooledObjectPrefab;
+            
             return objectPool;
         }
+    }
+}
+
+namespace DataStructures.Utility
+{
+    public static class ObjectPoolLabels
+    {
+        #if UNITY_EDITOR
+        #endif
+        
+        public const string objectPool = "Pool";
     }
 }

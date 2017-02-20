@@ -457,6 +457,7 @@ namespace Drawing.Utility
         public const string pointCount = "Point Count: ";
         public const string selectedPosition = "Selected Position:";
         public const string movePoint = "Move Point";
+        public const string moveBezierCurve = movePoint + " - Cubic Bezier Curve";
         public const string addCurve = "Add Curve";
         public const string addCurveDescription = "Adding Curve to Spline";
         public const string mode = "Mode";
@@ -683,7 +684,7 @@ namespace Drawing.Utility
                     // If the editor detected change, i.e. the user translated the handle via scene view, 
                     // Record a change to the inspector and update the original position reference in 
                     // the actual curve to reflect the new position in local coordinates.
-                    this.PrepareChange(bezierSpline, "Move Point - Cubic Bezier Curve");
+                    this.PrepareChange(bezierSpline, BezierSplineLabels.moveBezierCurve);
                     bezierSpline.SetPoint(pointIndex, transform.InverseTransformPoint(point));
                 }
             }
