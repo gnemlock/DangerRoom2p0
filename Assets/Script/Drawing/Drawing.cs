@@ -137,5 +137,13 @@ namespace Drawing
         Vector3 GetVelocityOfPointOnCurve(float t);
         
         void SetPoint(int pointIndex, Vector3 newPoint);
+        
+        bool Loop { get; }
     }
 }
+
+//TODO:Further Spline Implementation: Remove Curves from BezierSpline
+//TODO:Further Spline Implementation: Split Curves in BezierSpline
+//TODO:Further Spline Implementation: Merge Curves into BezierSpline
+//TODO:Explore new curve: Centripetal Catmull-Rom
+//TODO:Explore new curve: NURB

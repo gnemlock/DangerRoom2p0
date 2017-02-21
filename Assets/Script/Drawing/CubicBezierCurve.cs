@@ -22,6 +22,8 @@ namespace Drawing
         /// <summary>The fourth point in this Bezier curve.</summary>
         [Tooltip(Tooltips.pointFour)][SerializeField] protected Vector3 pointFour;
         
+        public bool Loop { get { return false; } }
+        
         #if UNITY_EDITOR
         /// <summary>This method will be called whenever the class is instantiated or reset via the 
         /// inspector. This method is EDITOR ONLY.</summary>
