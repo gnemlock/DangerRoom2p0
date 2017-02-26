@@ -1,6 +1,10 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿/* 
+ * Created by Matthew F Keating with the help of Catlike Coding Tutorials.
+ *  --- http://catlikecoding.com/unity/tutorials/curves-and-splines/ ---
+ */
 
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace SpecialEffects

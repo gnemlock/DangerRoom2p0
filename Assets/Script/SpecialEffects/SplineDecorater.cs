@@ -25,7 +25,7 @@ namespace SpecialEffects
             
             float stepSize = decorationFrequency * decorations.Length;
             stepSize = (spline.Loop || stepSize == 1.0f) 
-                ? (1.0f / stepSize) : (1.0f / (stepSize - 1.0f);
+                ? (1.0f / stepSize) : (1.0f / (stepSize - 1.0f));
             
             for(int count = 0, pointIncrement = 0; count < decorationFrequency; count++)
             {
