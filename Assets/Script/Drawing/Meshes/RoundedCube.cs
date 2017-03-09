@@ -5,15 +5,24 @@
 
 using UnityEngine;
 
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
 namespace Drawing.Meshes
 {
     [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
     public class RoundedCube : MonoBehaviour
     {
-        public int width, height, depth;
+        [Range(1, 255)] public int width = 1;
+        [Range(1, 255)] public int height = 1;
+        [Range(1, 255)] public int depth = 1;
+        [Range(1, 100)] public int curveWeight = 1;
         
         private Mesh mesh;
-        public Vector3[] vertices;
+        private Vector3[] vertices;
+        private Vector3[] normals;
+        private Color32[] cubeUV;
         
         private void Awake()
         {
@@ -25,17 +34,18 @@ namespace Drawing.Meshes
         {
             if(vertices != null)
             {
-                Gizmos.color = Color.black;
-                
                 for(int i = 0; i < vertices.Length; i++)
                 {
+                    Gizmos.color = Color.black;
                     Gizmos.DrawSphere(transform.TransformPoint(vertices[i]), 0.1f);
+                    Gizmos.color = Color.yellow;
+                    Gizmos.DrawRay(transform.TransformPoint(vertices[i]), normals[i]);
                 }
             }
         }
         #endif
 
-        private void Generate()
+        public void Generate()
         {
             GetComponent<MeshFilter>().mesh = mesh = new Mesh();
             mesh.name = "Procedural Cube";
@@ -153,28 +163,85 @@ namespace Drawing.Meshes
         
         private void GenerateTriangles()
         {
-            int quadCount = (width * height + width * depth + height * depth) * 2;
+            int[] trianglesX = new int[(depth * height) * 12];
+            int[] trianglesY = new int[(width * depth) * 12];
+            int[] trianglesZ = new int[(width * height) * 12];
             int ringLength = (width + depth) * 2;
-            int[] triangles = new int[quadCount * 6];
-            int triangleIndex = 0, vertexIndex = 0;
+            int triangleXIndex = 0, triangleYIndex = 0, triangleZIndex = 0, vertexIndex = 0;
             
             for(int y = 0; y < height; y++, vertexIndex++)
             {
-            
-                for(int quadIndex = 0; quadIndex < ringLength - 1; quadIndex++, vertexIndex++)
+                for(int quadIndex = 0; quadIndex < width; quadIndex++, vertexIndex++)
                 {
-                    triangleIndex = GenerateQuadTriangles(triangles, triangleIndex, vertexIndex, 
+                    triangleZIndex = GenerateQuadTriangles(trianglesZ, triangleZIndex, vertexIndex, 
+                        vertexIndex + 1, vertexIndex + ringLength, vertexIndex + ringLength + 1);
+                }
+                
+                for(int quadIndex = 0; quadIndex < depth; quadIndex++, vertexIndex++)
+                {
+                    triangleXIndex = GenerateQuadTriangles(trianglesX, triangleXIndex, vertexIndex, 
+                        vertexIndex + 1, vertexIndex + ringLength, vertexIndex + ringLength + 1);
+                }
+                
+                for(int quadIndex = 0; quadIndex < width; quadIndex++, vertexIndex++)
+                {
+                    triangleZIndex = GenerateQuadTriangles(trianglesZ, triangleZIndex, vertexIndex, 
+                        vertexIndex + 1, vertexIndex + ringLength, vertexIndex + ringLength + 1);
+                }
+
+                for(int quadIndex = 0; quadIndex < depth - 1; quadIndex++, vertexIndex++)
+                {
+                    triangleXIndex = GenerateQuadTriangles(trianglesX, triangleXIndex, vertexIndex, 
                         vertexIndex + 1, vertexIndex + ringLength, vertexIndex + ringLength + 1);
                 }
             
-                triangleIndex = GenerateQuadTriangles(triangles, triangleIndex, vertexIndex, 
+                triangleXIndex = GenerateQuadTriangles(trianglesX, triangleXIndex, vertexIndex, 
                     vertexIndex - ringLength + 1, vertexIndex + ringLength, vertexIndex + 1);
             }
+
+            triangleYIndex = GenerateTopFace(trianglesY, triangleYIndex, ringLength);
+            triangleYIndex = GenerateBottomFace(trianglesY, triangleYIndex, ringLength);
+
+            mesh.subMeshCount = 3;
+            mesh.SetTriangles(trianglesZ, 0);
+            mesh.SetTriangles(trianglesX, 1);
+            mesh.SetTriangles(trianglesY, 2);
+        }
+        
+        private void GenerateVertex(int vertexIndex, int x, int y, int z)
+        {
+            Vector3 innerVertex = vertices[vertexIndex] = new Vector3(x, y, z);
             
-            triangleIndex = GenerateTopFace(triangles, triangleIndex, ringLength);
-            triangleIndex = GenerateBottomFace(triangles, triangleIndex, ringLength);
+            if(x < curveWeight)
+            {
+                innerVertex.x = curveWeight;
+            }
+            else if(x > width - curveWeight)
+            {
+                innerVertex.x = width - curveWeight;
+            }
             
-            mesh.triangles = triangles;
+            if(y < curveWeight)
+            {
+                innerVertex.y = curveWeight;
+            }
+            else if(y > height - curveWeight)
+            {
+                innerVertex.y = height - curveWeight;
+            }
+            
+            if(z < curveWeight)
+            {
+                innerVertex.z = curveWeight;
+            }
+            else if(z > depth - curveWeight)
+            {
+                innerVertex.z = depth - curveWeight;
+            }
+            
+            normals[vertexIndex] = (vertices[vertexIndex] - innerVertex).normalized;
+            vertices[vertexIndex] = innerVertex + normals[vertexIndex] * curveWeight;
+            cubeUV[vertexIndex] = new Color32((byte)x, (byte)y, (byte)z, 0);
         }
         
         private void GenerateVertices()
@@ -186,27 +253,29 @@ namespace Drawing.Meshes
             int vertexIndex = 0;
 
             vertices = new Vector3[cornerVerticesCount + edgeVerticesCount + faceVerticesCount];
+            normals = new Vector3[vertices.Length];
+            cubeUV = new Color32[vertices.Length];
 
             for(int y = 0; y <= height; y++)
             {
                 for(int x = 0; x <= width; x++)
                 {
-                    vertices[vertexIndex++] = new Vector3(x, y, 0);
+                    GenerateVertex(vertexIndex++, x, y, 0);
                 }
 
                 for(int z = 1; z <= depth; z++)
                 {
-                    vertices[vertexIndex++] = new Vector3(width, y, z);
+                    GenerateVertex(vertexIndex++, width, y, z);
                 }
 
                 for(int x = width - 1; x >= 0; x--)
                 {
-                    vertices[vertexIndex++] = new Vector3(x, y, depth);
+                    GenerateVertex(vertexIndex++, x, y, depth);
                 }
 
                 for(int z = depth - 1; z > 0; z--)
                 {
-                    vertices[vertexIndex++] = new Vector3(0, y, z);
+                    GenerateVertex(vertexIndex++, 0, y, z);
                 }
             }
 
@@ -214,7 +283,7 @@ namespace Drawing.Meshes
             {
                 for(int x = 1; x < width; x++)
                 {
-                    vertices[vertexIndex++] = new Vector3(x, height, z);
+                    GenerateVertex(vertexIndex++, x, height, z);
                 }
             }
 
@@ -222,11 +291,13 @@ namespace Drawing.Meshes
             {
                 for(int x = 1; x < width; x++)
                 {
-                    vertices[vertexIndex++] = new Vector3(x, 0, z);
+                    GenerateVertex(vertexIndex++, x, 0, z);
                 }
             }
 
             mesh.vertices = vertices;
+            mesh.normals = normals;
+            mesh.colors32 = cubeUV;
         }
         
         private static int GenerateQuadTriangles(int[] triangles, int index, int bottomLeftIndex, 
@@ -240,4 +311,23 @@ namespace Drawing.Meshes
             return index + 6;
         }
     }
+}
+
+namespace Drawing.Meshes.Utility
+{
+    [CustomEditor(typeof(RoundedCube))] public class RoundedCubeEditor : Editor
+    {
+        public override void OnInspectorGUI()
+        {
+            RoundedCube roundedCube = target as RoundedCube;
+            
+            DrawDefaultInspector();
+            
+            if(GUILayout.Button("Generate Cube"))
+            {
+                roundedCube.Generate();
+            }
+        }
+    }
+
 }
