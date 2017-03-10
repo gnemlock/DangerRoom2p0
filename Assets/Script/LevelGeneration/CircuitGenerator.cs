@@ -6,12 +6,10 @@ using UnityEngine;
 
 #if UNITY_EDITOR
 using UnityEditor;
-using Label = LevelGeneration.Utility.CircuitGeneratorLabels;
 #endif
 
 namespace LevelGeneration
 {
-    
     public class CircuitGenerator : MonoBehaviour
     {
         [SerializeField] private int waypointCount = 10;
@@ -117,15 +115,8 @@ namespace LevelGeneration
 
 namespace LevelGeneration.Utility
 {
-    /// <summary>This class holds the tooltips for variables serialized to the inspector.</summary>
-    public static class CircuitGeneratorLabels
-    {
-        #if UNITY_EDITOR
-        #endif
-    }
-
     /// <summary>This class provides additional functionality to the editor.</summary>
-    [CustomEditor(typeof(CircuitGenerator))] public class CircuitGeneratorInspector : Editor
+    [CustomEditor(typeof(CircuitGenerator))] public class CircuitGeneratorEditor : Editor
     {
         #if UNITY_EDITOR
         /// <summary>This method will be called to draw the inspector interface for the target 

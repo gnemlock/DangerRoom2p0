@@ -468,7 +468,7 @@ namespace Drawing.Utility
     }
     
     /// <summary>This class provides additional functionality to the editor.</summary>
-    [CustomEditor(typeof(BezierSpline))] public class BezierSplineInspector : Editor
+    [CustomEditor(typeof(BezierSpline))] public class BezierSplineEditor : Editor
     {
         #if UNITY_EDITOR
         /// <summary>Represents the size of each handle marker, used to mark handles for unselected 

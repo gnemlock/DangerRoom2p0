@@ -44,7 +44,7 @@ namespace Drawing.Utility
     }
 
     /// <summary>This class provides additional functionality to the editor.</summary>
-    [CustomEditor(typeof(Lines))] public class LinesInspector : Editor
+    [CustomEditor(typeof(Lines))] public class LinesEditor : Editor
     {
         #if UNITY_EDITOR
         /// <summary>This method will be called to draw the inspector interface for the target 

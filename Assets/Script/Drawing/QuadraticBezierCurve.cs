@@ -170,7 +170,7 @@ namespace Drawing.Utility
     }
 
     /// <summary>This class provides additional functionality to the editor.</summary>
-    [CustomEditor(typeof(QuadraticBezierCurve))] public class QuadraticBezierCurveInspector : Editor
+    [CustomEditor(typeof(QuadraticBezierCurve))] public class QuadraticBezierCurveEditor : Editor
     {
         #if UNITY_EDITOR
         /// <summary>Cached reference to the target <see cref="QuadraticBezierCurve"/>.</summary>

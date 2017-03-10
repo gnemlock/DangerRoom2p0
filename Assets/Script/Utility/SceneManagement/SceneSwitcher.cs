@@ -29,12 +29,13 @@ namespace Utility.SceneManagement
 
 namespace Utility.SceneManagement.Utility
 {
-    public static class SceneManagementLabels
+    public static partial class SceneManagementLabels
     {
         #if UNITY_EDITOR
         public const string switchScenes = "Switch Scenes";
         #endif
     }
+    
     [CustomEditor(typeof(SceneSwitcher))] public class SceneSwitcherEditor : Editor
     {
         #if UNITY_EDITOR

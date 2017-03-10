@@ -542,7 +542,7 @@ namespace LevelGeneration.Utility
     }
 
     /// <summary>This class provides additional functionality to the editor.</summary>
-    [CustomEditor(typeof(MeshGenerator))] public class MeshGeneratorInspector : Editor
+    [CustomEditor(typeof(MeshGenerator))] public class MeshGeneratorEditor : Editor
     {
         #if UNITY_EDITOR
         /// <summary>This method will be called to draw the inspector interface for the target 

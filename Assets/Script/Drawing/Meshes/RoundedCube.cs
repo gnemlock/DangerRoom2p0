@@ -19,6 +19,7 @@ namespace Drawing.Meshes
         [Range(1, 255)] public int depth = 1;
         [Range(1, 100)] public int curveWeight = 1;
         
+        private bool generated = false;
         private Mesh mesh;
         private Vector3[] vertices;
         private Vector3[] normals;
@@ -52,6 +53,9 @@ namespace Drawing.Meshes
             
             GenerateVertices();
             GenerateTriangles();
+            GenerateColliders();
+            
+            generated = true;
         }
         
         private int GenerateBottomFace(int[] triangles, int triangleIndex, int ringLength)
@@ -108,6 +112,55 @@ namespace Drawing.Meshes
                 vertexTop - 1, vertexMiddle, vertexTop - 2);
 
             return triangleIndex;
+        }
+        
+        private void GenerateBoxCollider(float colliderWidth, float colliderHeight, 
+            float colliderDepth)
+        {
+            BoxCollider boxCollider = gameObject.AddComponent<BoxCollider>();
+            boxCollider.size = new Vector3(colliderWidth, colliderHeight, colliderDepth);
+        }
+        
+        private void GenerateCapsuleCollider(int direction, float x, float y, float z)
+        {
+            CapsuleCollider capsuleCollider = gameObject.AddComponent<CapsuleCollider>();
+            capsuleCollider.center = new Vector3(x, y, z);
+            capsuleCollider.direction = direction;
+            capsuleCollider.radius = curveWeight;
+            capsuleCollider.height = capsuleCollider.center[direction] * 2.0f;
+        }
+        
+        private void GenerateColliders()
+        {
+            if(generated)
+            {
+                RemoveColliders();
+            }
+            
+            float curveBuffer = curveWeight * 2.0f;
+            
+            GenerateBoxCollider(width, height - curveBuffer, depth - curveBuffer);
+            GenerateBoxCollider(width - curveBuffer, height, depth - curveBuffer);
+            GenerateBoxCollider(width - curveBuffer, height - curveBuffer, depth);
+            
+            Vector3 minimumPosition = Vector3.one * curveWeight;
+            Vector3 halfwayPosition = new Vector3(width, depth, height) * 0.5f;
+            Vector3 maximumPosition = new Vector3(width, depth, height) - minimumPosition;
+            
+            GenerateCapsuleCollider(0, halfwayPosition.x, minimumPosition.y, minimumPosition.z);
+            GenerateCapsuleCollider(0, halfwayPosition.x, minimumPosition.y, maximumPosition.z);
+            GenerateCapsuleCollider(0, halfwayPosition.x, maximumPosition.y, minimumPosition.z);
+            GenerateCapsuleCollider(0, halfwayPosition.x, maximumPosition.y, maximumPosition.z);
+            
+            GenerateCapsuleCollider(1, minimumPosition.x, halfwayPosition.y, minimumPosition.z);
+            GenerateCapsuleCollider(1, minimumPosition.x, halfwayPosition.y, maximumPosition.z);
+            GenerateCapsuleCollider(1, maximumPosition.x, halfwayPosition.y, minimumPosition.z);
+            GenerateCapsuleCollider(1, maximumPosition.x, halfwayPosition.y, maximumPosition.z);
+
+            GenerateCapsuleCollider(2, minimumPosition.x, minimumPosition.y, halfwayPosition.z);
+            GenerateCapsuleCollider(2, minimumPosition.x, maximumPosition.y, halfwayPosition.z);
+            GenerateCapsuleCollider(2, maximumPosition.x, minimumPosition.y, halfwayPosition.z);
+            GenerateCapsuleCollider(2, maximumPosition.x, maximumPosition.y, halfwayPosition.z);
         }
         
         private int GenerateTopFace(int[] triangles, int triangleIndex, int ringLength)
@@ -298,6 +351,21 @@ namespace Drawing.Meshes
             mesh.vertices = vertices;
             mesh.normals = normals;
             mesh.colors32 = cubeUV;
+        }
+        
+        private void RemoveColliders()
+        {
+            Collider[] colliders = gameObject.GetComponents<Collider>();
+            Debug.Log("Removing " + colliders.Length + " items.");
+            
+            for(int i = 0; i < colliders.Length; i++)
+            {
+                #if UNITY_EDITOR
+                DestroyImmediate(colliders[i]);
+                #else
+                Destroy(colliders[i]);
+                #endif
+            }
         }
         
         private static int GenerateQuadTriangles(int[] triangles, int index, int bottomLeftIndex, 

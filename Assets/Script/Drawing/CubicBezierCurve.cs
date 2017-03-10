@@ -124,7 +124,7 @@ namespace Drawing.Utility
     }
     
     /// <summary>This class provides additional functionality to the editor.</summary>
-    [CustomEditor(typeof(CubicBezierCurve))] public class CubicBezierCurveInspector : Editor
+    [CustomEditor(typeof(CubicBezierCurve))] public class CubicBezierCurveEditor : Editor
     {
         #if UNITY_EDITOR
         /// <summary>Cached reference to the target <see cref="CubicBezierCurve"/>.</summary>

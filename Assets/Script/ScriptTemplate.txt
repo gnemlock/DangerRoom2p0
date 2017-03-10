@@ -1,0 +1,36 @@
+namespace <CoreNameSpace>Utility
+
+public static partial class <Namespace>Debug AS Log
+ - custom log outputs
+   - custom strings for log outputs
+
+public static partial class <Namespace>StringFormats AS StringFormat
+ - string formats for user interface display
+  - ToString() string format
+
+public static class <ClassName>Tooltips As Tooltips
+#if UNITY_EDITOR
+ - tooltips for public variables
+
+public static partial class <NameSpace>Labels AS Labels
+#if UNITY_EDITOR
+ - labels for use in the editor:
+   - button labels
+   - "Prepare Change" labels
+#else
+ - labels for use in naming game objects
+
+public class <ClassName>Editor : Editor
+#if UNITY_EDITOR
+ - all custom editor logic
+ 
+public static partial class <NameSpace>Tags As Tags
+ - stores tags for use in tag comparison
+  
+public static class <ClassName>Colours
+#if UNITY_EDITOR
+ - colours for use in drawing objects in the inspector
+
+public static class <ClassName>Dimensions
+#if UNITY_EDITOR
+ - dimensions for use in drawing objects in the inspector
