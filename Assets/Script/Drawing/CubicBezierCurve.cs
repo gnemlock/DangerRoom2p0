@@ -25,8 +25,9 @@ namespace Drawing
         public bool Loop { get { return false; } }
         
         #if UNITY_EDITOR
-        /// <summary>This method will be called whenever the class is instantiated or reset via the 
-        /// inspector. This method is EDITOR ONLY.</summary>
+        /// <summary>This method is called when we instantiate or reset an instance of 
+        /// <see cref="Drawing.CubicBezierCurve"/>  in the editor. THIS METHOD IS EDITOR ONLY.
+        /// </summary>
         protected override void Reset()
         {
             // Set the fourth point to the default value, and use the base method to reset the rest.

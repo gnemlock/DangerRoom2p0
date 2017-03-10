@@ -107,8 +107,8 @@ namespace Drawing
         }
         
         #if UNITY_EDITOR
-        /// <summary>Reset is called by the editor when we instantiate or reset the instance. THIS 
-        /// METHOD IS EDITOR ONLY.</summary>
+        /// <summary>This method is called when we instantiate or reset an instance of 
+        /// <see cref="Drawing.BezierSpline"/> in the editor. THIS METHOD IS EDITOR ONLY.</summary>
         void Reset()
         {
             // points should be set to an initial Vector3 array of 4, representing the first curve.

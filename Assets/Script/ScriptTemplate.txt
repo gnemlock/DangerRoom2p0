@@ -27,10 +27,16 @@ public class <ClassName>Editor : Editor
 public static partial class <NameSpace>Tags As Tags
  - stores tags for use in tag comparison
   
-public static class <ClassName>Colours
+public static class <ClassName>Colours as Colours
 #if UNITY_EDITOR
  - colours for use in drawing objects in the inspector
+  - static instead of constant
 
-public static class <ClassName>Dimensions
+public static class <ClassName>Dimensions as Dimensions
 #if UNITY_EDITOR
  - dimensions for use in drawing objects in the inspector
+ 
+ Start: This method will be called just before the first Update call.
+ Awake: This method will be called when this instance of <this> is loaded.
+ Reset: This method is called when we instantiate or reset an instance of <this> in the editor. THIS METHOD IS EDITOR ONLY.
+ OnDrawGizmos: This method is called when the editor draws the gizmos for an instance of <this>. THIS METHOD IS EDITOR ONLY.
