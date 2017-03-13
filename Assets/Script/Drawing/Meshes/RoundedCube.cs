@@ -53,7 +53,7 @@ namespace Drawing.Meshes
         /// <see cref="UnityEngine.Color32"/> values for convenience when passing the UV 
         /// coordinates to the custom shader.</remarks>
         private Color32[] cubeUV;
-        
+
         /// <summary>This method will be called when this instance of 
         /// <see cref="Drawing.Meshes.RoundedCube"/> is loaded.</summary>
         private void Awake()
@@ -61,7 +61,7 @@ namespace Drawing.Meshes
             // Generate the rounded cube mesh, along with it's colliders.
             Generate();
         }
-        
+
         #if UNITY_EDITOR
         /// <summary>This method is called when the editor draws the gizmos for an instance of 
         /// <see cref="Drawing.Meshes.RoundedCube"/>. THIS METHOD IS EDITOR ONLY.</summary>
@@ -90,17 +90,17 @@ namespace Drawing.Meshes
             // Create the mesh, and add it to the mesh filter.
             GetComponent<MeshFilter>().mesh = mesh = new Mesh();
             mesh.name = Labels.roundedCubeName;
-            
+
             // Generate the vertices and triangles for the mesh, and the colliders.
             GenerateVertices();
             GenerateTriangles();
             GenerateColliders();
             Vector3[] sor;
-            
+
             // Mark the mesh as generated.
             generated = true;
         }
-        
+
         private int GenerateBottomFace(int[] triangles, int triangleIndex, int ringLength)
         {
             int vertexIndex = 1;
@@ -108,7 +108,7 @@ namespace Drawing.Meshes
             int vertexMiddle = vertices.Length - (width - 1) * (depth - 1);
             int vertexMaximum;
             int vertexTop;
-            
+
             triangleIndex = GenerateQuadTriangles(triangles, triangleIndex, ringLength - 1, 
                 vertexMiddle, 0, 1);
 
@@ -156,14 +156,14 @@ namespace Drawing.Meshes
 
             return triangleIndex;
         }
-        
+
         private void GenerateBoxCollider(float colliderWidth, float colliderHeight, 
             float colliderDepth)
         {
             BoxCollider boxCollider = gameObject.AddComponent<BoxCollider>();
             boxCollider.size = new Vector3(colliderWidth, colliderHeight, colliderDepth);
         }
-        
+
         private void GenerateCapsuleCollider(int direction, float x, float y, float z)
         {
             CapsuleCollider capsuleCollider = gameObject.AddComponent<CapsuleCollider>();
@@ -172,29 +172,29 @@ namespace Drawing.Meshes
             capsuleCollider.radius = curveWeight;
             capsuleCollider.height = capsuleCollider.center[direction] * 2.0f;
         }
-        
+
         private void GenerateColliders()
         {
             if(generated)
             {
                 RemoveColliders();
             }
-            
+
             float curveBuffer = curveWeight * 2.0f;
-            
+
             GenerateBoxCollider(width, height - curveBuffer, depth - curveBuffer);
             GenerateBoxCollider(width - curveBuffer, height, depth - curveBuffer);
             GenerateBoxCollider(width - curveBuffer, height - curveBuffer, depth);
-            
+
             Vector3 minimumPosition = Vector3.one * curveWeight;
             Vector3 halfwayPosition = new Vector3(width, depth, height) * 0.5f;
             Vector3 maximumPosition = new Vector3(width, depth, height) - minimumPosition;
-            
+
             GenerateCapsuleCollider(0, halfwayPosition.x, minimumPosition.y, minimumPosition.z);
             GenerateCapsuleCollider(0, halfwayPosition.x, minimumPosition.y, maximumPosition.z);
             GenerateCapsuleCollider(0, halfwayPosition.x, maximumPosition.y, minimumPosition.z);
             GenerateCapsuleCollider(0, halfwayPosition.x, maximumPosition.y, maximumPosition.z);
-            
+
             GenerateCapsuleCollider(1, minimumPosition.x, halfwayPosition.y, minimumPosition.z);
             GenerateCapsuleCollider(1, minimumPosition.x, halfwayPosition.y, maximumPosition.z);
             GenerateCapsuleCollider(1, maximumPosition.x, halfwayPosition.y, minimumPosition.z);
@@ -205,7 +205,7 @@ namespace Drawing.Meshes
             GenerateCapsuleCollider(2, maximumPosition.x, minimumPosition.y, halfwayPosition.z);
             GenerateCapsuleCollider(2, maximumPosition.x, maximumPosition.y, halfwayPosition.z);
         }
-        
+
         private int GenerateTopFace(int[] triangles, int triangleIndex, int ringLength)
         {
             int vertexIndex = ringLength * height;
@@ -219,44 +219,44 @@ namespace Drawing.Meshes
                 triangleIndex = GenerateQuadTriangles(triangles, triangleIndex, vertexIndex, 
                     vertexIndex + 1, vertexIndex + ringLength - 1, vertexIndex + ringLength);
             }
-            
+
             vertexMaximum = vertexIndex + 2;
 
             triangleIndex = GenerateQuadTriangles(triangles, triangleIndex, vertexIndex, 
                 vertexIndex + 1, vertexIndex + ringLength - 1, vertexIndex + 2);
-            
+
             for(int z = 1; z < depth - 1; z++, vertexMinimum--, vertexMiddle++, vertexMaximum++)
             {
                 triangleIndex = GenerateQuadTriangles(triangles, triangleIndex, vertexMinimum, 
                     vertexMiddle, vertexMinimum - 1, vertexMiddle + width - 1);
-            
+
                 for(int x = 1; x < width - 1; x++, vertexMiddle++)
                 {
                     triangleIndex = GenerateQuadTriangles(triangles, triangleIndex, vertexMiddle, 
                         vertexMiddle + 1, vertexMiddle + width - 1, vertexMiddle + width);
                 }
-            
+
                 triangleIndex = GenerateQuadTriangles(triangles, triangleIndex, vertexMiddle, 
                     vertexMaximum, vertexMiddle + width - 1, vertexMaximum + 1);
             }
-            
-           vertexTop = vertexMinimum - 2;
-            
+
+            vertexTop = vertexMinimum - 2;
+
             triangleIndex = GenerateQuadTriangles(triangles, triangleIndex, vertexMinimum, 
                 vertexMiddle, vertexMinimum - 1, vertexMinimum - 2);
-            
+
             for(int x = 1; x < width - 1; x++, vertexTop--, vertexMiddle++)
             {
                 triangleIndex = GenerateQuadTriangles(triangles, triangleIndex, vertexMiddle, 
                     vertexMiddle + 1, vertexTop, vertexTop - 1);
             }
-            
+
             triangleIndex = GenerateQuadTriangles(triangles, triangleIndex, vertexMiddle, 
                 vertexTop - 2, vertexTop, vertexTop - 1);
 
             return triangleIndex;
         }
-        
+
         private void GenerateTriangles()
         {
             int[] trianglesX = new int[(depth * height) * 12];
@@ -264,7 +264,7 @@ namespace Drawing.Meshes
             int[] trianglesZ = new int[(width * height) * 12];
             int ringLength = (width + depth) * 2;
             int triangleXIndex = 0, triangleYIndex = 0, triangleZIndex = 0, vertexIndex = 0;
-            
+
             for(int y = 0; y < height; y++, vertexIndex++)
             {
                 for(int quadIndex = 0; quadIndex < width; quadIndex++, vertexIndex++)
@@ -272,13 +272,13 @@ namespace Drawing.Meshes
                     triangleZIndex = GenerateQuadTriangles(trianglesZ, triangleZIndex, vertexIndex, 
                         vertexIndex + 1, vertexIndex + ringLength, vertexIndex + ringLength + 1);
                 }
-                
+
                 for(int quadIndex = 0; quadIndex < depth; quadIndex++, vertexIndex++)
                 {
                     triangleXIndex = GenerateQuadTriangles(trianglesX, triangleXIndex, vertexIndex, 
                         vertexIndex + 1, vertexIndex + ringLength, vertexIndex + ringLength + 1);
                 }
-                
+
                 for(int quadIndex = 0; quadIndex < width; quadIndex++, vertexIndex++)
                 {
                     triangleZIndex = GenerateQuadTriangles(trianglesZ, triangleZIndex, vertexIndex, 
@@ -290,7 +290,7 @@ namespace Drawing.Meshes
                     triangleXIndex = GenerateQuadTriangles(trianglesX, triangleXIndex, vertexIndex, 
                         vertexIndex + 1, vertexIndex + ringLength, vertexIndex + ringLength + 1);
                 }
-            
+
                 triangleXIndex = GenerateQuadTriangles(trianglesX, triangleXIndex, vertexIndex, 
                     vertexIndex - ringLength + 1, vertexIndex + ringLength, vertexIndex + 1);
             }
@@ -303,11 +303,11 @@ namespace Drawing.Meshes
             mesh.SetTriangles(trianglesX, 1);
             mesh.SetTriangles(trianglesY, 2);
         }
-        
+
         private void GenerateVertex(int vertexIndex, int x, int y, int z)
         {
             Vector3 innerVertex = vertices[vertexIndex] = new Vector3(x, y, z);
-            
+
             if(x < curveWeight)
             {
                 innerVertex.x = curveWeight;
@@ -316,7 +316,7 @@ namespace Drawing.Meshes
             {
                 innerVertex.x = width - curveWeight;
             }
-            
+
             if(y < curveWeight)
             {
                 innerVertex.y = curveWeight;
@@ -325,7 +325,7 @@ namespace Drawing.Meshes
             {
                 innerVertex.y = height - curveWeight;
             }
-            
+
             if(z < curveWeight)
             {
                 innerVertex.z = curveWeight;
@@ -334,12 +334,12 @@ namespace Drawing.Meshes
             {
                 innerVertex.z = depth - curveWeight;
             }
-            
+
             normals[vertexIndex] = (vertices[vertexIndex] - innerVertex).normalized;
             vertices[vertexIndex] = innerVertex + normals[vertexIndex] * curveWeight;
             cubeUV[vertexIndex] = new Color32((byte)x, (byte)y, (byte)z, 0);
         }
-        
+
         private void GenerateVertices()
         {
             int cornerVerticesCount = 8;
@@ -395,12 +395,12 @@ namespace Drawing.Meshes
             mesh.normals = normals;
             mesh.colors32 = cubeUV;
         }
-        
+
         private void RemoveColliders()
         {
             Collider[] colliders = gameObject.GetComponents<Collider>();
             Debug.Log("Removing " + colliders.Length + " items.");
-            
+
             for(int i = 0; i < colliders.Length; i++)
             {
                 #if UNITY_EDITOR
@@ -410,7 +410,7 @@ namespace Drawing.Meshes
                 #endif
             }
         }
-        
+
         private static int GenerateQuadTriangles(int[] triangles, int index, int bottomLeftIndex, 
             int bottomRightIndex, int topLeftIndex, int topRightIndex)
         {
@@ -418,7 +418,7 @@ namespace Drawing.Meshes
             triangles[index + 1] = triangles[index + 4] = topLeftIndex;
             triangles[index + 2] = triangles[index + 3] = bottomRightIndex;
             triangles[index + 5] = topRightIndex;
-            
+
             return index + 6;
         }
     }
@@ -442,7 +442,7 @@ namespace Drawing.Meshes.Utility
             + "cube";
         #endif
     }
-    
+
     public static class RoundedCubeColours
     {
         #if UNITY_EDITOR
@@ -452,7 +452,7 @@ namespace Drawing.Meshes.Utility
         public static Color normalRayColour = Color.yellow;
         #endif
     }
-    
+
     public static class RoundedCubeDimensions
     {
         #if UNITY_EDITOR
@@ -460,15 +460,15 @@ namespace Drawing.Meshes.Utility
         public const float vertexMarkerRadius = 0.1f;
         #endif
     }
-    
+
     [CustomEditor(typeof(RoundedCube))] public class RoundedCubeEditor : Editor
     {
         public override void OnInspectorGUI()
         {
             RoundedCube roundedCube = target as RoundedCube;
-            
+
             DrawDefaultInspector();
-            
+
             if(GUILayout.Button("Generate Cube"))
             {
                 roundedCube.Generate();

@@ -7,6 +7,7 @@ using UnityEngine;
 
 #if UNITY_EDITOR
 using UnityEditor;
+using GenericDebug = Utility.Testing.GenericDebug;
 #endif
 
 namespace Drawing.Meshes
@@ -19,16 +20,17 @@ namespace Drawing.Meshes
     using Dimensions = Utility.CubedSphereDimensions;
     #endif
 
-    /// <summary>Represents an irregular cube mesh with rounded edges.</summary>
+    /// <summary>Represents a sphere created using a mesh based off 
+    /// <see cref="Drawing.Meshes.RoundedCube"/> </summary>
     /// <remarks>The mesh is created using three sub meshes. As such, the 
     /// <see cref="UnityEngine.MeshRenderer"/> needs to employ three 
     /// <see cref="UnityEngine.Material"/> references.</remarks>
     [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
     public class CubedSphere : MonoBehaviour, IMeshGeneratable
     {
-        /// <summary>The size of the grids making up the sphere. The sphere is made up of 6 grids, 
-        /// much like a cube.</summary>
-        [Tooltip(Tooltips.gridSize)][Range(1, 255)] public int gridSize = 1;
+        /// <summary>The length of each grid making up the sides of this 
+        /// <see cref="Drawing.Meshes.CubedSphere"/>.</summary>
+        [Tooltip(Tooltips.gridSize)][Range(2, 255)] public int gridSize = 1;
         public float radius = 1.0f;
 
         /// <summary>Has this <see cref="Drawing.Meshes.RoundedCube"/> been generated?</summary>
@@ -84,13 +86,12 @@ namespace Drawing.Meshes
         {
             // Create the mesh, and add it to the mesh filter.
             GetComponent<MeshFilter>().mesh = mesh = new Mesh();
-            mesh.name = Labels.cubedSphereName;
+            mesh.name = Labels.roundedCubeName;
 
             // Generate the vertices and triangles for the mesh, and the colliders.
             GenerateVertices();
             GenerateTriangles();
             GenerateColliders();
-            Vector3[] sor;
 
             // Mark the mesh as generated.
             generated = true;
@@ -258,12 +259,28 @@ namespace Drawing.Meshes
             mesh.SetTriangles(trianglesZ, 0);
             mesh.SetTriangles(trianglesX, 1);
             mesh.SetTriangles(trianglesY, 2);
+
+            #if UNITY_EDITOR
+            //GenericDebug.SendArrayToDebug(trianglesX);
+            //GenericDebug.SendArrayToDebug(trianglesY);
+            //GenericDebug.SendArrayToDebug(trianglesZ);
+            //GenericDebug.SendArrayToDebug(vertices);
+            #endif
         }
 
         private void GenerateVertex(int vertexIndex, int x, int y, int z)
         {
             Vector3 vertex = new Vector3(x, y, z) * 2.0f / gridSize - Vector3.one;
-            normals[vertexIndex] = vertex.normalized;
+            Vector3 vertexSquared 
+                = new Vector3(vertex.x * vertex.x, vertex.y * vertex.y, vertex.z * vertex.z);
+            float normalisedX = vertex.x * Mathf.Sqrt(1.0f - vertexSquared.y / 2.0f 
+                - vertexSquared.z / 2.0f + vertexSquared.y * vertexSquared.z / 3.0f);
+            float normalisedY = vertex.y * Mathf.Sqrt(1.0f - vertexSquared.x / 2.0f 
+                - vertexSquared.z / 2.0f + vertexSquared.x * vertexSquared.z / 3.0f);
+            float normalisedZ = vertex.z * Mathf.Sqrt(1.0f - vertexSquared.x / 2.0f 
+                - vertexSquared.y / 2.0f + vertexSquared.x * vertexSquared.y / 3.0f);
+            
+            normals[vertexIndex] = new Vector3(normalisedX, normalisedY, normalisedZ);
             vertices[vertexIndex] = normals[vertexIndex] * radius;
             cubeUV[vertexIndex] = new Color32((byte)x, (byte)y, (byte)z, 0);
         }
@@ -326,7 +343,7 @@ namespace Drawing.Meshes
 
         private void RemoveColliders()
         {
-            SphereCollider sphereCollider = GetComponent<SphereCollider>();
+            SphereCollider sphereCollider = gameObject.GetComponent<SphereCollider>();
 
             #if UNITY_EDITOR
             DestroyImmediate(sphereCollider);
@@ -359,8 +376,8 @@ namespace Drawing.Meshes.Utility
     public static class CubedSphereTooltips
     {
         #if UNITY_EDITOR
-        public const string gridSize = "The size of the grids making up the six sides of the "
-            + "sphere.";
+        public const string gridSize = "The number of regions along any one side of the grids " 
+            + "making up the six sides of the sphere.";
         #endif
     }
 

@@ -40,3 +40,4 @@ public static class <ClassName>Dimensions as Dimensions
  Awake: This method will be called when this instance of <this> is loaded.
  Reset: This method is called when we instantiate or reset an instance of <this> in the editor. THIS METHOD IS EDITOR ONLY.
  OnDrawGizmos: This method is called when the editor draws the gizmos for an instance of <this>. THIS METHOD IS EDITOR ONLY.
+ OnDrawGizmosSelected: This method is called when the editor draws the gizmos for an instance of <this> that is selected in the Inspector. THIS METHOD IS EDITOR ONLY.
