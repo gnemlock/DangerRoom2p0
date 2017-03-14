@@ -35,6 +35,10 @@ namespace Drawing.Meshes
 
         /// <summary>Has this <see cref="Drawing.Meshes.RoundedCube"/> been generated?</summary>
         public bool generated { get; private set; }
+        
+        #if UNITY_EDITOR
+        public bool showGizmos;
+        #endif
 
         /// <summary>Holds reference to the generated mesh.</summary>
         private Mesh mesh;
@@ -64,7 +68,7 @@ namespace Drawing.Meshes
         /// <see cref="Drawing.Meshes.RoundedCube"/>. THIS METHOD IS EDITOR ONLY.</summary>
         private void OnDrawGizmos()
         {
-            if(vertices != null)
+            if(vertices != null && showGizmos)
             {
                 for(int i = 0; i < vertices.Length; i++)
                 {
@@ -395,7 +399,7 @@ namespace Drawing.Meshes.Utility
     {
         #if UNITY_EDITOR
         /// <summary>The radius used to draw vertex markers.</summary>
-        public const float vertexMarkerRadius = 0.1f;
+        public const float vertexMarkerRadius = 0.01f;
         #endif
     }
 
