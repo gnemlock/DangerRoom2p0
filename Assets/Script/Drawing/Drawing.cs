@@ -110,7 +110,7 @@ namespace Drawing
                 + 3.0f * t * t * (pointFour - pointThree));
         }
     }
-    
+
     /// <summary>Represents a smoothing mode, used to determine the logic applied to a bezier curve 
     /// to ensure the line smoothly meets with a connecting bezier curve. Mode changes are 
     /// cumulative.</summary>
@@ -125,7 +125,7 @@ namespace Drawing
         /// </summary>
         Mirrored
     }
-    
+
     public interface IBezierInterface
     {
         Vector3 GetDirectionOfPointOnCurve(float t);
