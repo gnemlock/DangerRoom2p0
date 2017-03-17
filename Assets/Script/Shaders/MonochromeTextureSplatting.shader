@@ -1,12 +1,13 @@
 ﻿// Created by Matthew F Keating with the help of Catlike Coding Tutorials.
-//  --- http://catlikecoding.com/unity/tutorials/rendering/part-1 ---
+//  --- http://catlikecoding.com/unity/tutorials/rendering/part-3 ---
 
-Shader "Custom/My First Shader"
+Shader "Custom/Monochrome Texture Splatting"
 {
     Properties
     {
-        _Tint ("Tint Colour", Color) = (1, 1, 1, 1)
-        _MainTex ("Texture", 2D) = "white" {}
+        _MainTex ("Splat Map", 2D) = "white" {}
+        [NoScaleOffset] _Texture1 ("Black Texture", 2D) = "white" {}
+        [NoScaleOffset] _Texture2 ("White Texture", 2D) = "white" {}
     }
     SubShader
     {
@@ -19,15 +20,15 @@ Shader "Custom/My First Shader"
 
             #include "UnityCG.cginc"
 
-            float4 _Tint;
             sampler2D _MainTex;
             float4 _MainTex_ST;
+            sampler2D _Texture1, _Texture2;
 
             struct Interpolators
             {
                 float4 position : SV_POSITION;
                 float2 uv : TEXCOORD0;
-                //float3 localPosition : TEXCOORD0;
+                float2 uvSplat : TEXCOORD1;
             };
 
             struct VertexData
@@ -40,7 +41,6 @@ Shader "Custom/My First Shader"
             {
                 Interpolators interpolators;
 
-                //interpolators.localPosition = position.xyz;
                 interpolators.position = mul(UNITY_MATRIX_MVP, vertexData.position);
                 interpolators.uv = TRANSFORM_TEX(vertexData.uv, _MainTex);
 
@@ -49,7 +49,10 @@ Shader "Custom/My First Shader"
 
             float4 MyFragmentProgram(Interpolators interpolators) : SV_TARGET
             {
-                return tex2D(_MainTex, interpolators.uv) * _Tint;
+                float4 splat = tex2D(_MainTex, interpolators.uvSplat);
+
+                return tex2D(_Texture1, interpolators.uv) * splat.r 
+                    + tex2D(_Texture2, interpolators.uv * (1 - splat.r));
             }
 
             ENDCG

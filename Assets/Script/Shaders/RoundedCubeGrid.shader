@@ -1,4 +1,7 @@
-﻿Shader "Custom/Rounded Cube Grid"
+﻿// Created by Matthew F Keating with the help of Catlike Coding Tutorials.
+// --- http://catlikecoding.com/unity/tutorials/cube-sphere/ ---
+
+Shader "Custom/Rounded Cube Grid"
 {
     Properties
     {

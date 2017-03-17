@@ -1,12 +1,13 @@
 ﻿// Created by Matthew F Keating with the help of Catlike Coding Tutorials.
-//  --- http://catlikecoding.com/unity/tutorials/rendering/part-1 ---
+//  --- http://catlikecoding.com/unity/tutorials/rendering/part-3 ---
 
-Shader "Custom/My First Shader"
+"Custom/Textured With Detail"
 {
     Properties
     {
         _Tint ("Tint Colour", Color) = (1, 1, 1, 1)
         _MainTex ("Texture", 2D) = "white" {}
+        _DetailTex ("Detail Texture", 2D) = "gray" {}
     }
     SubShader
     {
@@ -20,14 +21,14 @@ Shader "Custom/My First Shader"
             #include "UnityCG.cginc"
 
             float4 _Tint;
-            sampler2D _MainTex;
-            float4 _MainTex_ST;
+            sampler2D _MainTex, _DetailTex;
+            float4 _MainTex_ST, _DetailTex_ST;
 
             struct Interpolators
             {
                 float4 position : SV_POSITION;
                 float2 uv : TEXCOORD0;
-                //float3 localPosition : TEXCOORD0;
+                float2 uvDetail : TEXCOORD1;
             };
 
             struct VertexData
@@ -40,16 +41,18 @@ Shader "Custom/My First Shader"
             {
                 Interpolators interpolators;
 
-                //interpolators.localPosition = position.xyz;
                 interpolators.position = mul(UNITY_MATRIX_MVP, vertexData.position);
                 interpolators.uv = TRANSFORM_TEX(vertexData.uv, _MainTex);
+                interpolators.uvDetail = TRANSFORM_TEX(vertexData.uv, _DetailTex);
 
                 return interpolators;
             }
 
             float4 MyFragmentProgram(Interpolators interpolators) : SV_TARGET
             {
-                return tex2D(_MainTex, interpolators.uv) * _Tint;
+                float4 colour = tex2D(_MainTex, interpolators.uv) * _Tint;
+                colour *= tex2D(_MainTex, interpolators.uvDetail) * unity_ColorSpaceDouble;
+                return colour;
             }
 
             ENDCG
