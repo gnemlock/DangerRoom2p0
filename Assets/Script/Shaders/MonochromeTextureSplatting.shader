@@ -24,6 +24,12 @@ Shader "Custom/Monochrome Texture Splatting"
             float4 _MainTex_ST;
             sampler2D _Texture1, _Texture2;
 
+            struct VertexData
+            {
+                 float4 position : POSITION;
+                 float2 uv : TEXCOORD0;
+            };
+
             struct Interpolators
             {
                 float4 position : SV_POSITION;
@@ -31,11 +37,7 @@ Shader "Custom/Monochrome Texture Splatting"
                 float2 uvSplat : TEXCOORD1;
             };
 
-            struct VertexData
-            {
-                 float4 position : POSITION;
-                 float2 uv : TEXCOORD0;
-            };
+          
 
             Interpolators MyVertexProgram(VertexData vertexData)
             {
@@ -51,8 +53,7 @@ Shader "Custom/Monochrome Texture Splatting"
             {
                 float4 splat = tex2D(_MainTex, interpolators.uvSplat);
 
-                return tex2D(_Texture1, interpolators.uv) * splat.r 
-                    + tex2D(_Texture2, interpolators.uv * (1 - splat.r));
+                return tex2D(_Texture1, interpolators.uv) * splat.r + tex2D(_Texture2, interpolators.uv * (1 - splat.r));
             }
 
             ENDCG

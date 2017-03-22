@@ -11,9 +11,9 @@ namespace SpecialEffects
 {
     using Drawing;
 
-    public class SplineWalker<T> : MonoBehaviour where T : IBezierInterface
+    public class SplineWalker : MonoBehaviour
     {
-        public T spline;
+        public BezierSpline spline;
         public float duration;
         public bool lookingForward;
         public SplineWalkMode walkMode;
