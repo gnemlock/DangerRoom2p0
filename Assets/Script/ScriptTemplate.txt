@@ -1,9 +1,15 @@
+#region Contructors
+#region MonoBehaviour Events and Parent Overrides
+#region Class Methods
+
 namespace <CoreNameSpace>Utility
 
+//This class holds debug functionality for the <CoreNameSpace> namespace.
 public static partial class <Namespace>Debug AS Log
  - custom log outputs
    - custom strings for log outputs
-
+   
+//This class holds string formats for the <CoreNameSpace> namespace.
 public static partial class <Namespace>StringFormats AS StringFormat
  - string formats for user interface display
   - ToString() string format
@@ -46,3 +52,4 @@ public static class <ClassName>Dimensions as Dimensions
  Reset: This method is called when we instantiate or reset an instance of <this> in the editor. THIS METHOD IS EDITOR ONLY.
  OnDrawGizmos: This method is called when the editor draws the gizmos for an instance of <this>. THIS METHOD IS EDITOR ONLY.
  OnDrawGizmosSelected: This method is called when the editor draws the gizmos for an instance of <this> that is selected in the Inspector. THIS METHOD IS EDITOR ONLY.
+ ToString: default.

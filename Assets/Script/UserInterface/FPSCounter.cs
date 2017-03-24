@@ -8,6 +8,7 @@ using UnityEngine;
 namespace UserInterface
 {
     using UnityEngine.UI;
+
     using Log = Utility.UserInterfaceDebug;
     using StringFormat = Utility.UserInterfaceStringFormats;
     
@@ -22,56 +23,11 @@ namespace UserInterface
     /// counter-productive.</remarks>
     public class FPSCounter : MonoBehaviour 
     {
+        #region Variables
         /// <summary>Reference to the current active instance of the <see cref="FPSCounter"/>.
         /// </summary>
         public static FPSCounter instance;
-        
-        /// <summary>GUI Label to display the <see cref="highestFrameRate"/> value.</summary>
-        /// <remarks>This reference needs to be set up via the inspector.</remarks>
-        [Tooltip(Tooltips.highestFPSLabel)] public Text highestFPSLabel;
-        /// <summary>GUI Label to display the <see cref="averageFrameRate"/> value.</summary>
-        /// <remarks>This reference needs to be set up via the inspector.</remarks>
-        [Tooltip(Tooltips.averageFPSLabel)] public Text averageFPSLabel;
-        /// <summary>GUI Label to display the <see cref="lowestFrameRate"/> value.</summary>
-        /// <remarks>This reference needs to be set up via the inspector.</remarks>
-        [Tooltip(Tooltips.lowestFPSLabel)] public Text lowestFPSLabel;
-        
-        /// <summary>The highest frame rate value with in the current range of recorded 
-        /// frame rates.</summary>
-        public int highestFrameRate { get; private set; }
-        /// <summary>The average frame rate value across the current range of recorded 
-        /// frame rates.</summary>
-        public int averageFrameRate { get; private set; }
-        /// <summary>The lowest frame rate value with in the current range of recorded 
-        /// frame rates.</summary>
-        public int lowestFrameRate { get; private set; }
-        
-        /// <summary>The number of recent frame rates recorded by the <see cref="FPSCounter"/>.
-        /// </summary>
-        /// <remarks>This value determines the size of <see cref="frameRateBuffer"/>, and in turn, 
-        /// alters the range from which <see cref="highestFrameRate"/>, 
-        /// <see cref="lowestFrameRate"/> and <see cref="averageFrameRate"/> are determined.
-        /// </remarks>
-        [SerializeField][Tooltip(Tooltips.frameRange)] private int frameRange = 60;
-        /// <summary>The colour range used to colour the GUI output text.</summary>
-        /// <remarks>Each colour is tied to a minimum value. Each colour should be set up in 
-        /// ascending order, as the display will iterate through each index, and use the first 
-        /// colour tied to a value at which the current frame rate value is equal to or exceeds.
-        /// </remarks>
-        [SerializeField][Tooltip(Tooltips.colourRange)] private IntColour[] colourRange;
-        
-        /// <summary>Contains record of the most recently recorded frame rates.</summary>
-        private int[] frameRateBuffer;
-        /// <summary>The current index position in the <see cref="frameRateBuffer"/>.</summary>
-        private int bufferIndex;
-        /// <summary>Is the <see cref="FPSCounter"/> displaying it's values to 
-        /// <see cref="UnityEngine.UI.Text"/> components?</summary>
-        /// <remarks>This is a simple alternative to constantly checking if the 
-        /// <see cref="UnityEngine.UI.Text"/> components are <c>null</c>. By setting this value to 
-        /// <c>false</c>, the <see cref="FPSCounter"/> will still calculate frame rates, but will 
-        /// not attempt to push the values to a display.</remarks>  
-        [SerializeField][Tooltip(Tooltips.displayToText)] private bool displayToText = true;
-        
+
         /// <summary>Pre-created strings for all possible values, ranging from 00 to 99.</summary>
         /// <remarks>The frame rate labels will only display values between 0 and 99, so all 
         /// possible strings are pre-created, to remove the need for dynamically create strings. 
@@ -87,7 +43,56 @@ namespace UserInterface
             "84", "85", "86", "87", "88", "89", "90", "91", "92", "93", "94", "95", "96", "97", 
             "98", "99"
         };
-        
+
+        /// <summary>GUI Label to display the <see cref="highestFrameRate"/> value.</summary>
+        /// <remarks>This reference needs to be set up via the inspector.</remarks>
+        [Tooltip(Tooltips.highestFPSLabel)] public Text highestFPSLabel;
+        /// <summary>GUI Label to display the <see cref="averageFrameRate"/> value.</summary>
+        /// <remarks>This reference needs to be set up via the inspector.</remarks>
+        [Tooltip(Tooltips.averageFPSLabel)] public Text averageFPSLabel;
+        /// <summary>GUI Label to display the <see cref="lowestFrameRate"/> value.</summary>
+        /// <remarks>This reference needs to be set up via the inspector.</remarks>
+        [Tooltip(Tooltips.lowestFPSLabel)] public Text lowestFPSLabel;
+
+        /// <summary>The number of recent frame rates recorded by the <see cref="FPSCounter"/>.
+        /// </summary>
+        /// <remarks>This value determines the size of <see cref="frameRateBuffer"/>, and in turn, 
+        /// alters the range from which <see cref="highestFrameRate"/>, 
+        /// <see cref="lowestFrameRate"/> and <see cref="averageFrameRate"/> are determined.
+        /// </remarks>
+        [SerializeField][Tooltip(Tooltips.frameRange)] private int frameRange = 60;
+        /// <summary>The colour range used to colour the GUI output text.</summary>
+        /// <remarks>Each colour is tied to a minimum value. Each colour should be set up in 
+        /// ascending order, as the display will iterate through each index, and use the first 
+        /// colour tied to a value at which the current frame rate value is equal to or exceeds.
+        /// </remarks>
+        [SerializeField][Tooltip(Tooltips.colourRange)] private IntColour[] colourRange;
+        /// <summary>Is the <see cref="FPSCounter"/> displaying it's values to 
+        /// <see cref="UnityEngine.UI.Text"/> components?</summary>
+        /// <remarks>This is a simple alternative to constantly checking if the 
+        /// <see cref="UnityEngine.UI.Text"/> components are <c>null</c>. By setting this value to 
+        /// <c>false</c>, the <see cref="FPSCounter"/> will still calculate frame rates, but will 
+        /// not attempt to push the values to a display.</remarks>  
+        [SerializeField][Tooltip(Tooltips.displayToText)] private bool displayToText = true;
+
+        /// <summary>Contains record of the most recently recorded frame rates.</summary>
+        private int[] frameRateBuffer;
+        /// <summary>The current index position in the <see cref="frameRateBuffer"/>.</summary>
+        private int bufferIndex;
+        #endregion
+
+        #region Properties
+        /// <summary>The highest frame rate value with in the current range of recorded 
+        /// frame rates.</summary>
+        public int highestFrameRate { get; private set; }
+        /// <summary>The average frame rate value across the current range of recorded 
+        /// frame rates.</summary>
+        public int averageFrameRate { get; private set; }
+        /// <summary>The lowest frame rate value with in the current range of recorded 
+        /// frame rates.</summary>
+        public int lowestFrameRate { get; private set; }
+        #endregion
+
         #region Constructors
         /// <summary>Initializes a new instance of the <see cref="UserInterface.FPSCounter"/> class 
         /// to display frame rate values with no colour transition. Note that this class is a 
@@ -188,7 +193,7 @@ namespace UserInterface
             displayToText = false;
         }
         #endregion
-        
+
         #region MonoBehaviour Events and Parent Overrides
         /// <summary>This method is called when the instance is loaded.</summary>
         private void Awake()
@@ -239,11 +244,12 @@ namespace UserInterface
         /// <see cref="highestFrameRate"/> and <see cref="averageFrameRate"/>.</returns>
         public override string ToString()
         {
-            return string.Format(StringFormat.FPSCounter, highestFrameRate, averageFrameRate, 
+            return string.Format(StringFormat.fpsCounter, highestFrameRate, averageFrameRate, 
                 lowestFrameRate);
         }
         #endregion
-        
+
+        #region Class Methods
         /// <summary>Updates <see cref="lowestFrameRate"/>, <see cref="highestFrameRate"/> and 
         /// <see cref="averageFrameRate"/> based off the current set of values in 
         /// <see cref="frameRateBuffer"/>.</summary>
@@ -281,7 +287,7 @@ namespace UserInterface
             highestFrameRate = highest;
             lowestFrameRate = lowest;
         }
-        
+
         /// <summary>Updates a <see cref="Text"/> label with a corresponding frame rate value, and 
         /// updates the text colour according to the values set in <see cref="colourRange"/>.
         /// </summary>
@@ -305,7 +311,7 @@ namespace UserInterface
                 }
             }
         }
-        
+
         /// <summary>Initialises <see cref="frameRateBuffer"/>.</summary>
         /// <remarks>Ensures that <see cref="frameRange"/> is greater than <c>0</c>, initialises 
         /// <see cref="frameRateBuffer"/> as a new array and resets the <see cref="bufferIndex"/> 
@@ -323,7 +329,7 @@ namespace UserInterface
             frameRateBuffer = new int[frameRange];
             bufferIndex = 0;
         }
-        
+
         /// <summary>Determines wether the <see cref="FPSCounter"/> is displaying to a 
         /// <see cref="UnityEngine.UI.Text"/> interface, or only calculating the frame rate.
         /// </summary>
@@ -333,7 +339,7 @@ namespace UserInterface
         {
             return displayToText;
         }
-        
+
         /// <summary>Updates the <see cref="frameRateBuffer"/> array with a new frame rate reading, 
         /// and adjusts <see cref="bufferIndex"/> to accomodate to the next update.</summary>
         private void UpdateFrameRateBuffer()
@@ -349,6 +355,7 @@ namespace UserInterface
                 bufferIndex = 0;
             }
         }
+        #endregion
     }
 }
 
@@ -357,9 +364,12 @@ namespace UserInterface.Utility
     /// <summary>This class holds debug functionality for the UserInterface namespace.</summary>
     public static partial class UserInterfaceDebug
     {
+        #region Warning Messages
         private const string additionalFPSCounterWarning = "Warning: Detecting multiple iterations " 
             + "of FPSCounter. Removing newest instance.";
-        
+        #endregion
+
+        #region Warning
         /// <summary>Provides debug concerning additional instances of the singleton FPSCounter.
         /// </summary>
         /// <param name="fpsCounter">The new FPSCounter.</param>
@@ -370,14 +380,15 @@ namespace UserInterface.Utility
         {
             Debug.Log(additionalFPSCounterWarning, fpsCounter);
         }
+        #endregion
     }
     
     /// <summary>This class holds string formats for the UserInterface namespace.</summary>
     public static partial class UserInterfaceStringFormats
     {
-        /// <summary>Formats the values of an FPSCounter, with the intention of being formatted 
-        /// with the highestFrameRate, lowestFrameRate and averageFrameRate.</summary>
-        public const string FPSCounter = "FPS (Highest = {0} | Lowest = {1} | Average = {2})";
+        /// <summary>Formats the string output of an FPSCounter, with the intention of being 
+        /// formatted with the highestFrameRate, lowestFrameRate and averageFrameRate.</summary>
+        public const string fpsCounter = "FPS (Highest = {0} | Lowest = {1} | Average = {2})";
     }
     
     /// <summary>This class holds the tooltips for variables serialized to the inspector.</summary>
