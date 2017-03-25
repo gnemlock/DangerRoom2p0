@@ -29,6 +29,12 @@ namespace DataStructures
 
         #region Constructors
         /// <summary>Initializes a new instance of the <see cref="DataStructures.PooledObject"/> 
+        /// class.</summary>
+        public PooledObject()
+        {
+        }
+
+        /// <summary>Initializes a new instance of the <see cref="DataStructures.PooledObject"/> 
         /// class with a parent <see cref="DataStructures.ObjectPool"/> reference.</summary>
         /// <param name="objectPool">The <see cref="DataStructures.ObjectPool"/> to which this 
         /// <see cref="DataStructures.PooledObject"/> belongs, and returns, when recycled.</param>

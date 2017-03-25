@@ -48,7 +48,7 @@ namespace DataStructures
 
         #region MonoBehaviour Events and Parent Overrides
         /// <summary>This method will be called just before the first Update call.</summary>
-        private override void Start()
+        public virtual void Start()
         {
             if(pooledObjectPrefab == null)
             {

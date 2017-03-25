@@ -40,7 +40,7 @@ namespace Drawing
         [SerializeField] private Vector3 endOfSplinePosition;
         /// <summary>The last <see cref="BezierPointMode"/> </summary>
         [SerializeField] private BezierPointMode endOfSplineTransition;
-        
+
         /// <summary>Provides access to <see cref="loop"/>, ensuring that that <see cref="points"/> 
         /// is correctly adjusted to reflect change.</summary>
         /// <value><c>true</c> if this <see cref="BezierSpline"/> is a circuit; otherwise, <c>false</c>.</value>
@@ -80,7 +80,7 @@ namespace Drawing
                 }
             }
         }
-        
+
         /// <summary>Provides access to the length of the <see cref="points"/> array.</summary>
         /// <value>The length of the <see cref="points"/> array.</value>
         public int PointCount
@@ -91,7 +91,7 @@ namespace Drawing
                 return points.Length;
             }
         }
-        
+
         /// <summary>Provides access to the length of the <see cref="points"/> array, interpretted 
         /// as individual curves.</summary>
         /// <value>The amount of curves that would be drawn from the current <see cref="points"/> 
@@ -105,7 +105,7 @@ namespace Drawing
                 return ((points.Length - 1) / 3);
             }
         }
-        
+
         #if UNITY_EDITOR
         /// <summary>This method is called when we instantiate or reset an instance of 
         /// <see cref="Drawing.BezierSpline"/> in the editor. THIS METHOD IS EDITOR ONLY.</summary>
@@ -128,7 +128,7 @@ namespace Drawing
             };
         }
         #endif
-        
+
         /// <summary>Adds an additional curve to this <see cref="BezierSpline"/> , in the form of 
         /// three additional points. Transition mode will be maintained from the previous curve.
         /// </summary>
@@ -168,7 +168,7 @@ namespace Drawing
                 EnforceMode(0);
             }
         }
-        
+
         /// <summary>Enforces the <see cref="BezierPointMode"/> affecting a specified point, 
         /// applying relative smoothing to the neighboring points.</summary>
         /// <param name="pointIndex">The index for the target point in <see cref="points"/>.</param>
@@ -245,7 +245,7 @@ namespace Drawing
                 points[leftIndex] = middlePoint + enforcedDelta;
             }
         }
-        
+
         /// <summary>Finds the starting index of a specific curve in the <see cref="points"/> 
         /// array, based off an increment of the entire spline.</summary>
         /// <returns>The index of the determined curve's starting point in the <see cref="points"/> 
@@ -288,7 +288,7 @@ namespace Drawing
             // Return the determined starting index.
             return i;
         }
-        
+
         /// <summary>Finds the specified direction of this <see cref="BezierSpline"/> based off a 
         /// provided increment.</summary>
         /// <returns>The direction of this <see cref="BezierSpline"/> at the specified 
@@ -303,7 +303,7 @@ namespace Drawing
             // Find the velocity at the specified increment, and return the normalised value.
             return GetVelocityOfPointOnCurve(t).normalized;
         }
-        
+
         /// <summary>Gets a point in the <see cref="points"/> array.</summary>
         /// <returns>The position pointed to by <c>index</c>, in the <see cref="points"/> 
         /// array.</returns>
@@ -314,7 +314,7 @@ namespace Drawing
             // Return the Vector3 found at the specified index in points.
             return points[pointIndex];
         }
-        
+
         /// <summary>Finds the specified position on this <see cref="BezierSpline"/> based off a 
         /// provided increment.</summary>
         /// <returns>The position on this <see cref="BezierSpline"/> at the specified increment.
@@ -333,7 +333,7 @@ namespace Drawing
             return transform.TransformPoint(BezierUtility
                 .GetPoint(points[i], points[i + 1], points[i + 2], points[i + 3], t));
         }
-        
+
         /// <summary>Finds the specified velocity of this <see cref="BezierSpline"/> based off a 
         /// provided increment.</summary>
         /// <returns>The velocity of this <see cref="BezierSpline"/> at the specified 
@@ -353,7 +353,7 @@ namespace Drawing
             return transform.TransformPoint(BezierUtility
                 .GetFirstDerivative(points[i], points[i + 1], points[i + 2], points[i + 3], t));
         }
-        
+
         /// <summary>Gets the <see cref="BezierPointMode"/> set to the specified point.</summary>
         /// <returns>The <see cref="BezierPointMode"/> setting set to the specified point.</returns>
         /// <param name="pointIndex">The index for the target point in the <see cref="points"/> 
@@ -369,7 +369,7 @@ namespace Drawing
             // Using this, return the transition mode, given the specified index in points.
             return transitionModes[(pointIndex + 1) / 3];
         }
-        
+
         public void SetPoint(int pointIndex, Vector3 newPoint)
         {
             if(pointIndex % 3 == 0)
@@ -413,7 +413,7 @@ namespace Drawing
             points[pointIndex] = newPoint;
             EnforceMode(pointIndex);
         }
-        
+
         /// <summary>Sets the <see cref="BezierPointMode"/> affecting a specified point in the 
         /// points array. This will have an effect on the nearest joining point, and the point on 
         /// either side.</summary>
@@ -466,7 +466,7 @@ namespace Drawing.Utility
         public const string toggleLoopDescription = "Toggled Loop in Spline";
         #endif
     }
-    
+
     /// <summary>This class provides additional functionality to the editor.</summary>
     [CustomEditor(typeof(BezierSpline))] public class BezierSplineEditor : Editor
     {
@@ -480,7 +480,7 @@ namespace Drawing.Utility
         private const float tangentLength = 0.5f;
         private const bool showTangents = true;
         private const int lineSteps = 10;
-        
+
         /// <summary>Represents the currently selected index in the target points array.</summary>
         private int selectedIndex = -1;
         /// <summary>Cached reference to the target <see cref="BezierSpline"/>.</summary>
@@ -489,7 +489,7 @@ namespace Drawing.Utility
         private Transform transform;
         /// <summary>Cached reference to the intended handle rotation.</summary>
         private Quaternion handleRotation;
-        
+
         private static Color[] modeColours =
         {
             Color.white,
@@ -504,12 +504,12 @@ namespace Drawing.Utility
             // Explicitly reference the target class as a BezierSpline, so we have 
             // BezierSpline specific access.
             bezierSpline = target as BezierSpline;
-            
+
             EditorGUI.BeginChangeCheck();
-            
+
             bool loop = EditorGUILayout.Toggle(Label.loop, bezierSpline.Loop);
             GUILayout.Label(Label.pointCount + bezierSpline.PointCount);
-            
+
             if(EditorGUI.EndChangeCheck())
             {
                 this.PrepareChange(bezierSpline, Label.toggleLoopDescription);
@@ -520,7 +520,7 @@ namespace Drawing.Utility
             {
                 DrawSelectedPointToInspector();
             }
-            
+
             if(GUILayout.Button(Label.addCurve))
             {
                 // Add a button called "Add Curve", and when it is pressed, 
@@ -544,16 +544,16 @@ namespace Drawing.Utility
             // be the default identity value.
             handleRotation = (Tools.pivotRotation == PivotRotation.Local) ? 
                 transform.rotation : Quaternion.identity;
-            
+
             // Create a vector array to represent the position of each handle.
             // We only need 4 positions, as we only iterate through 4 handles at a time.
             // Set the first position, so we can iterate through the rest more easily.
             Vector3[] handlePosition = new Vector3[4];
             handlePosition[0] = ShowHandle(0);
-            
+
             // Set the handle colour in preparation for drawing lines between main points
             Handles.color = Color.white;
-            
+
             // For each curve set in the points array, 
             for(int i = 1; i < bezierSpline.PointCount; i += 3)
             {
@@ -562,45 +562,45 @@ namespace Drawing.Utility
                 {
                     // process each handle, and load the resulting positions into the array.
                     handlePosition[j + 1] = ShowHandle(i + j);
-                    
+
                     // Draw a line between the two handle positions.
                     Handles.DrawLine(handlePosition[j], handlePosition[j + 1]);
                 }
-                
+
                 // Draw a bezier curve between the current 4 positions.
                 Handles.DrawBezier(handlePosition[0], handlePosition[3], handlePosition[1], 
                     handlePosition[2], Color.red, null, 2.0f);
-                
+
                 // Set the first position of the next curve as the last position of this curve, 
                 // so the curves connect.
                 handlePosition[0] = handlePosition[3];
             }
-            
+
             if(true)
             {
                 // If we are to display tangents, display direction tangents.
                 ShowDirections();
             }
         }
-        
+
         private void DrawSelectedPointToInspector()
         {
             EditorGUI.BeginChangeCheck();
-            
+
             Vector3 point = EditorGUILayout
                 .Vector3Field(Label.selectedPosition, bezierSpline.GetPoint(selectedIndex));
-            
+
             if(EditorGUI.EndChangeCheck())
             {
                 this.PrepareChange(bezierSpline, Label.movePoint);
                 bezierSpline.SetPoint(selectedIndex, point);
             }
-            
+
             EditorGUI.BeginChangeCheck();
-            
+
             BezierPointMode mode = (BezierPointMode)EditorGUILayout
                 .EnumPopup(Label.mode, bezierSpline.GetPointMode(selectedIndex));
-            
+
             if(EditorGUI.EndChangeCheck())
             {
                 this.PrepareChange(bezierSpline, Label.changeModeDescription);
@@ -648,16 +648,16 @@ namespace Drawing.Utility
             // converted to world coordinates, and prepare the Handle gizmo to draw point markers.
             Vector3 point = transform.TransformPoint(bezierSpline.GetPoint(pointIndex));
             Handles.color = modeColours[(int)bezierSpline.GetPointMode(pointIndex)];
-            
+
             // Determine the current handle size, to work out the correct screen scale to use on 
             // our handle button.
             float trueHandleSize = HandleUtility.GetHandleSize(point);
-            
+
             if(pointIndex == 0)
             {
                 trueHandleSize *= 2.0f;
             }
-            
+
             if(Handles.Button(point, handleRotation, handleSize * trueHandleSize, 
                 triggerSize * trueHandleSize, Handles.DotCap))
             {
