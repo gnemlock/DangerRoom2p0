@@ -1,94 +1,100 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
+
 
 namespace UserInterface
 {
-    public class AlphaKeyboard : CustomKeyboard
+    public class AlphaKeyboard : CustomKeyboard, IAlphabetical
     {
-        public InputKey keyPrefab;
-        public float buffer = 0.1f;
-        public Vector2 rowStart;
+        public bool isLowercase { get; private set; }
 
-        private string keySet = "qwertyuiopasdfghjklzxcvbnm";
-        private InputKey[] inputKeys = new InputKey[26];
-        private bool isLowercase = false;
-        private bool created = false;
-        private bool enabled = false;
-        private Rect parentTransform;
-
-        private Vector2 startPosition;
-        private Vector2 keyDimension;
+        private bool isEnabled;
         
         private float screenWidth;
         private float screenHeight;
         private ScreenOrientation currentOrientation;
         
-        public void Start()
+        protected override void Start()
         {
-            currentOrientation = Screen.orientation;
-            CreateKeyboard();
+            base.Start();
+            
+            isLowercase = false;
         }
         
-        public void CreateKeyboard()
+        public override string ToString()
         {
-            Vector2 dimension = keyPrefab.GetBackingImageDimensions();
-            float screenWidth = Screen.width;
-            float screenHeight = Screen.height;
-            float localBuffer = 0f;
-            Vector2 inputPositionBuffer = rowStart;
+            return string.Format("[AlphaKeyboard: {0}]", characterSet);
+        }
+        
+        #if UNITY_EDITOR
+        public override void CreateKeyboard()
+        {
+            characterSet = "qwertyuiopasdfghjklzxcvbnm";
+            inputKeys = new InputKey[26];
+            Vector2 startPosition = GetStartPosition();
+            Vector2 currentPosition = startPosition;
 
             for(int i = 0; i < 10; i++)
             {
-                CreateKey(i, inputPositionBuffer);
-                inputPositionBuffer.x += buffer + dimension.x;
+                currentPosition.x += CreateKey(i, currentPosition);
             }
             
-            rowStart.x += dimension.x / 2.0f;
-            rowStart.y -= dimension.y + buffer;
-            inputPositionBuffer = rowStart;
-            localBuffer = 0f;
+            currentPosition = startPosition = ResetStartPosition(startPosition, 0.5f);
             
             for(int i = 10; i < 19; i++)
             {
-                CreateKey(i, inputPositionBuffer);
-                inputPositionBuffer.x += buffer + dimension.x;
+                currentPosition.x += CreateKey(i, currentPosition);
             }
             
-            rowStart.x += dimension.x;
-            rowStart.y -= dimension.y + buffer;
-            inputPositionBuffer = rowStart;
-            localBuffer = 0f;
+            currentPosition = startPosition = ResetStartPosition(startPosition);
             
             for(int i = 19; i < 26; i++)
             {
-                CreateKey(i, inputPositionBuffer);
-                inputPositionBuffer.x += buffer + dimension.x;
+                currentPosition.x += CreateKey(i, currentPosition);
             }
         }
         
-        public void SetParentTransform()
+        public override void DestroyKeyboard()
         {
-            RectTransform parentRectTransform = (RectTransform)transform.parent;
-            parentTransform = parentRectTransform.rect;
-            parentTransform.position *= -1;
+            for(int i = 0; i < inputKeys.Length; i++)
+            {
+                DestroyImmediate(inputKeys[i].gameObject);
+            }
         }
+        #endif
         
-        #region Key Creation        
-        private void CreateKey(int index, Vector2 position)
+        #region Key Creation
+        #if UNITY_EDITOR
+        /// <summary>Creates a new key.</summary>
+        /// <returns>The x buffer required to move position to the next position in the row.</returns>
+        /// <param name="index">The key index, corresponding to the appropriate character in the characterSet string.</param>
+        /// <param name="position">The local position of the new key.</param>
+        protected override float CreateKey(int index, Vector2 position)
         {
-            inputKeys[index] = (InputKey)Instantiate(keyPrefab);
-            inputKeys[index].SetKey(keySet[index]);
-            inputKeys[index].SetDimensions(position, keyDimension);
-            inputKeys[index].transform.SetParent(transform);
+            InputKey newInputKey = (InputKey)Instantiate(keyPrefab);
+            
+            newInputKey.SetKey(characterSet[index]);
+            newInputKey.SetDimensions(position);
+            newInputKey.transform.SetParent(transform);
+            newInputKey.name = "InputKey (" + characterSet[index].ToString() + ")";
+            newInputKey.SetKeyboard(this);
+            
+            inputKeys[index] = newInputKey;
+            
+            return xOffset;
         }
+        #endif
         
         public void RefreshKeys()
         {
             for(int i = 0; i < 26; i++)
             {
-                inputKeys[i].SetKey(keySet[i]);
+                inputKeys[i].SetKey(characterSet[i]);
             }
         }
         #endregion
@@ -96,13 +102,13 @@ namespace UserInterface
         #region Capitalisation
         public void ToUpper()
         {
-            keySet = keySet.ToUpper();
+            characterSet = characterSet.ToUpper();
             FinaliseCapitalisation(false);
         }
 
         public void ToLower()
         {
-            keySet = keySet.ToLower();
+            characterSet = characterSet.ToLower();
             FinaliseCapitalisation(true);
         }
         
@@ -126,21 +132,14 @@ namespace UserInterface
             }
         }
         #endregion
-        
-        #region Member Access
-        public bool IsEnabled()
-        {
-            return enabled;
-        }
-        
-        public bool IsCreated()
-        {
-            return created;
-        }
-        #endregion
     }
-    
-    [CustomEditor(typeof(AlphaKeyboard))]
+
+}
+
+namespace UserInterface.Utility
+{        
+    #if UNITY_EDITOR
+    [CustomEditor(typeof(UserInterface.AlphaKeyboard))]
     public class AlphaKeyboardEditor : Editor
     {
         public override void OnInspectorGUI()
@@ -148,21 +147,41 @@ namespace UserInterface
             DrawDefaultInspector();
 
             AlphaKeyboard alphaKeyboard = target as AlphaKeyboard;
-            
-            if(GUILayout.Button("GetParent"))
-            {
-                alphaKeyboard.SetParentTransform();
-            }
 
-            if(GUILayout.Button("CreateKeyboard"))
+
+            if(GUILayout.Button("Create Keyboard"))
             {
                 alphaKeyboard.CreateKeyboard();
             }
+            
+            if(GUILayout.Button("Destroy Keyboard"))
+            {
+                alphaKeyboard.DestroyKeyboard();
+            }
         }
-    }   
-}
-
-namespace UserInterface.Utility
-{
+    }
+    #endif
     
+    public static partial class UserInterfaceLabels
+    {
+        //TODO:Implement variations(include key spacing variation, use of accent, enum identifier)
+        /// <summary>The qwerty keyboard is the most commonly used english layout.</summary>
+        public const string qwertyKeyboard = "qwertyuiop,asdfghjkl,zxcvbnm";
+        /// <summary>The ordered keyboard has an alphabetically ordered layout.</summary>
+        public const string orderedKeyboard = "abcdefghij,klmnopqrs,tuvwxyz";
+        /// <summary>The azerty keyboard is a common french variation of the qwerty layout.</summary>
+        public const string azertyKeyboard = "azertyuiop,qsdfghjklm,wxcvbn";
+        /// <summary>The qwertz keyboard is a common central european variant of the qwerty layout.</summary>
+        public const string qwertzKeyboard = "qwertzuiopü,asdfghjklöä,yxcvbnm";
+        /// <summary>The qzerty keyboard is a common italian variation of the qwerty layout.</summary>
+        public const string qzertyKeyboard = "qzertyuiop,asdfghjklm,wxcvbn";
+        /// <summary>The dvorak keyboard is a lesser known keyboard layout known mostly for it's efficiency.</summary>
+        public const string dvorakKeyboard = "pyfgcrl,aoeuidhtns,qjkxbmwvz";
+        /// <summary>The colemak keyboard is a lesser known keyboard layout intended to replace the qwerty layout.</summary>
+        public const string colemakKeyboard = "qwfpgjluy,arstdhneio,zxcvbkm";
+        /// <summary>The jcuken keyboard is a common russian layout, and traditionally uses cyrillic characters.</summary>
+        public const string jcukenKeyboard = "jcukengzh,fywaproldv,qsmitxb";
+        /// <summary>The workman keyboard is a linux-based keyboard layout.</summary>
+        public const string workmanKeyboard = "qdrwbjfup,ashtgyneoi,zxmcvkl";
+    }
 }

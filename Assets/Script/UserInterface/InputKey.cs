@@ -11,17 +11,25 @@ namespace UserInterface
         private char key;
         public Image backingImage;
         public Text text;
+        private CustomKeyboard parentKeyboard;
         
+        #if UNITY_EDITOR
         public Vector2 GetBackingImageDimensions()
         {
             Rect rect = backingImage.rectTransform.rect;
             
             return new Vector2(rect.width, rect.height);
         }
+        #endif
         
-        public char GetKey()
+        public void ApplyInput()
+        {
+            parentKeyboard.AddInput(GetKey());
+        }
+        
+        public string GetKey()
         {   
-            return key;
+            return key.ToString();
         }
         
         public void SetKey(char key)
@@ -30,9 +38,14 @@ namespace UserInterface
             text.text = key.ToString();
         }
         
-        public void SetDimensions(Vector2 position, Vector2 dimensions)
+        public void SetDimensions(Vector2 position)
         {
             transform.localPosition = position;
+        }
+        
+        public void SetKeyboard(CustomKeyboard parentKeyboard)
+        {
+            this.parentKeyboard = parentKeyboard;
         }
     }
 }
