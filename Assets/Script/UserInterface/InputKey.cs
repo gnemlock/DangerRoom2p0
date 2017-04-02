@@ -6,6 +6,7 @@ namespace UserInterface
 {
     using UnityEngine.UI;
 
+    [RequireComponent(typeof(Button))]
     public class InputKey : MonoBehaviour
     {
         private char key;
@@ -38,9 +39,9 @@ namespace UserInterface
             text.text = key.ToString();
         }
         
-        public void SetDimensions(Vector2 position)
+        public void SetPosition(Vector3 position)
         {
-            transform.localPosition = position;
+            GetComponent<RectTransform>().anchoredPosition3D = position;
         }
         
         public void SetKeyboard(CustomKeyboard parentKeyboard)

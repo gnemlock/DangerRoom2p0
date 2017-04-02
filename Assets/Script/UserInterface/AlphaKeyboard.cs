@@ -15,10 +15,6 @@ namespace UserInterface
 
         private bool isEnabled;
         
-        private float screenWidth;
-        private float screenHeight;
-        private ScreenOrientation currentOrientation;
-        
         protected override void Start()
         {
             base.Start();
@@ -79,9 +75,9 @@ namespace UserInterface
             InputKey newInputKey = (InputKey)Instantiate(keyPrefab);
             
             newInputKey.SetKey(characterSet[index]);
-            newInputKey.SetDimensions(position);
             newInputKey.transform.SetParent(transform);
-            newInputKey.name = "InputKey (" + characterSet[index].ToString() + ")";
+            newInputKey.SetPosition(position);
+            newInputKey.name = "InputKey (" + characterSet[index].ToString().ToUpper() + ")";
             newInputKey.SetKeyboard(this);
             
             inputKeys[index] = newInputKey;

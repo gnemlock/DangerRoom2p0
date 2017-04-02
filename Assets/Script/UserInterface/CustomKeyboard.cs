@@ -6,10 +6,13 @@ namespace UserInterface
 {
     public abstract class CustomKeyboard : MonoBehaviour
     {
+        #if UNITY_EDITOR
         /// <summary>The key prefab used to instantiate keys.</summary>
         public InputKey keyPrefab;
         /// <summary>The default distance between each key, along both x and y dimensions.</summary>
-        public float keyBorderLength = 0.1f;
+        public float horizontalBorderLength = 0.5f;
+        public float verticalBorderLength = 1.0f;
+        #endif
         
         /// <summary>The current input registered to this <see cref="UserInterface.CustomKeyboard"/>.</summary>
         protected string currentInput;
@@ -24,11 +27,12 @@ namespace UserInterface
         public bool isEnabled { get; protected set; }
         
         #if UNITY_EDITOR
-        protected float xOffset { get { return keyPrefab.GetBackingImageDimensions().x + keyBorderLength; } }
-        protected float yOffset { get { return keyPrefab.GetBackingImageDimensions().y + keyBorderLength; } }
-        protected float xHalfOffset { get { return keyPrefab.GetBackingImageDimensions().x / 2.0f; } }
-        protected float xOffsetNoBorder { get { return keyPrefab.GetBackingImageDimensions().x; } }
-        protected float yOffsetNoBorder { get { return keyPrefab.GetBackingImageDimensions().y; } }
+        protected float xOffset { get { return keyDimensions.x + verticalBorderLength; } }
+        protected float yOffset { get { return keyDimensions.y + horizontalBorderLength; } }
+        protected float xHalfOffset { get { return keyDimensions.x / 2.0f; } }
+        protected float yHalfOffset { get { return keyDimensions.y / 2.0f; } }
+        protected Vector2 halfOffset { get { return new Vector2(xHalfOffset, yHalfOffset); } }
+        protected Vector2 keyDimensions { get { return keyPrefab.GetBackingImageDimensions(); } }
         #endif
         
         protected virtual void Start()
@@ -49,6 +53,10 @@ namespace UserInterface
         //TODO:Implement return, backspace, capslock and shift keys
         public abstract void DestroyKeyboard();
         
+        //TODO: Figure out input
+        //TODO: Split InputKey up into two classes, to represent keys that are selected by external input, and keys that allow direct input
+        
+        
         /// <summary>Determines the position for the first key on the first row of the keyboard.</summary>
         /// <returns>The first key on the first row of the keyboard.</returns>
         /// <param name="topRowCount">The number of keys along the top row of the keyboard</param>
@@ -56,23 +64,44 @@ namespace UserInterface
         /// <param name="offset">The y offset of the first key on the first row of the keyboard.</param>
         protected Vector2 GetStartPosition(int topRowCount = 10, int rowCount = 3, float offset = 0f)
         {
-            RectTransform rectTransform = transform .parent as RectTransform;
-            Vector2 canvasDimension = new Vector2(rectTransform.rect.width, rectTransform.rect.height);
-            Vector2 canvasCenter = rectTransform.rect.center;
-            //TODO: Align to center of canvas properly
-            //TODO: Figure out why border distance only applys some of the time
-            //TODO: Figure out why text has gone blurry
-            //TODO: Figure out input
-            //TODO: Split InputKey up into two classes, to represent keys that are selected by external input, and keys that allow direct input
-            Debug.Log(canvasDimension + " " + canvasCenter);
+            // Use the inital transform position as our initial startPosition.
+            Vector2 startPosition = transform.localPosition;
             
-            // y offset from bottom of canvas
-            float bottomOffset = rowCount * yOffset;
-            // x offset from middle of canvas
-            float middleOffset = xOffsetNoBorder + (xOffset * (rowCount - 1));
+            // Move the starting position down to the bottom of the canvas. We must ensure that 
+            // we use the base canvas for this measurement.
+            startPosition.y -= GetBaseRectTransform(transform).rect.height / 2.0f;
             
-            return new Vector2(canvasCenter.x - (middleOffset / 2.0f) + offset, 
-                canvasCenter.y - canvasDimension.y + bottomOffset);
+            // We now need to adjust for the size of the keyboard. The keyboard width is the total 
+            // sum of keys along the top row, multiplied by the key width, including the border. As 
+            // we only have borders between keys, we deduct one border length to balance out the 
+            // initial inclusion of border in all key widths. The keyboard height is the total sum 
+            // of key rows, multiplied by the key height, including the border. We include the 
+            // additional border as buffer from the bottom.
+            float keyboardWidth = (xOffset * topRowCount) - horizontalBorderLength;
+            float keyboardHeight = yOffset * rowCount;
+            Debug.Log(keyboardHeight);
+            
+            // We need to move the startPosition to the left by half the width of the keyboard, 
+            // to centre it, and move it up by the height, to fit it on to the screen.
+            startPosition.x -= keyboardWidth / 2.0f;
+            startPosition.y += keyboardHeight;
+            
+            // Finally, we need to adjust 
+            startPosition += halfOffset;
+            
+            return startPosition;
+        }
+
+        protected static RectTransform GetBaseRectTransform(Transform currentTransform)
+        {
+            if(currentTransform.parent == null)
+            {
+                return currentTransform as RectTransform;
+            }
+            else
+            {
+                return GetBaseRectTransform(currentTransform.parent);
+            }
         }
         
         /// <summary>Returns a reset start position with offset to the next row.</summary>
