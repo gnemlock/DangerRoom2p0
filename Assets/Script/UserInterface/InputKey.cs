@@ -1,31 +1,21 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace UserInterface
 {
     using UnityEngine.UI;
 
     [RequireComponent(typeof(Button))]
-    public class InputKey : MonoBehaviour
+    public class InputKey : Key
     {
-        private char key;
-        public Image backingImage;
+        [SerializeField][HideInInspector] private char key;
         public Text text;
-        private CustomKeyboard parentKeyboard;
         
-        #if UNITY_EDITOR
-        public Vector2 GetBackingImageDimensions()
-        {
-            Rect rect = backingImage.rectTransform.rect;
-            
-            return new Vector2(rect.width, rect.height);
-        }
-        #endif
+        
         
         public void ApplyInput()
         {
             parentKeyboard.AddInput(GetKey());
+            Debug.Log(key.ToString());
         }
         
         public string GetKey()
@@ -37,16 +27,6 @@ namespace UserInterface
         {
             this.key = key;
             text.text = key.ToString();
-        }
-        
-        public void SetPosition(Vector3 position)
-        {
-            GetComponent<RectTransform>().anchoredPosition3D = position;
-        }
-        
-        public void SetKeyboard(CustomKeyboard parentKeyboard)
-        {
-            this.parentKeyboard = parentKeyboard;
         }
     }
 }

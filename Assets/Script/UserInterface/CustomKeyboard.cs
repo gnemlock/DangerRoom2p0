@@ -19,7 +19,7 @@ namespace UserInterface
         /// <summary>The list of characters used for simple character-based keys</summary>
         protected string characterSet;
         /// <summary>The list of keys presently in the keyboard.</summary>
-        protected InputKey[] inputKeys;
+        [SerializeField][HideInInspector] protected InputKey[] inputKeys;
         
         /// <summary>Has the keyboard been created?</summary>
         public bool isCreated { get; protected set; }
