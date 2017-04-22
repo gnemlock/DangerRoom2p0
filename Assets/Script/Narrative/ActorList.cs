@@ -4,17 +4,8 @@ using UnityEngine;
 
 namespace Narrative
 {
-    public class ActorList : MonoBehaviour
+    public static class ActorList : MonoBehaviour
     {
-        public ActorListing[] actors;
-    }
-    
-    [System.Serializable]
-    public struct ActorListing
-    {
-        public Font font;
-        public Sprite background;
-        public Color fontColour;
-        public string name;
+        public static ActorList[] actors;
     }
 }
