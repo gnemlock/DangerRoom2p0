@@ -1,6 +1,9 @@
+#region Variables
+#region Properties
 #region Contructors
 #region MonoBehaviour Events and Parent Overrides
 #region Class Methods
+#region Static Functionality
 
 namespace <CoreNameSpace>Utility
 
@@ -8,6 +11,12 @@ namespace <CoreNameSpace>Utility
 public static partial class <Namespace>Debug AS Log
  - custom log outputs
    - custom strings for log outputs
+#region Notification Messages
+#region Warning Messages
+#region Error Messages
+#region Notifications
+#region Warnings
+#region Errors
    
 //This class holds string formats for the <CoreNameSpace> namespace.
 public static partial class <Namespace>StringFormats AS StringFormat
@@ -47,9 +56,11 @@ public static class <ClassName>Dimensions as Dimensions
  
  Start: This method will be called just before the first Update call.
  Awake: This method will be called when this instance of <this> is loaded.
+ OnDestroy: This method will be called when this instance of <this> is unloaded.
  OnEnable: This method will be called when this instance of <this> is enabled and set as active.
  OnDisable: This method will be called when this instance of <this> is deactivated or set as disabled.
  Reset: This method is called when we instantiate or reset an instance of <this> in the editor. THIS METHOD IS EDITOR ONLY.
  OnDrawGizmos: This method is called when the editor draws the gizmos for an instance of <this>. THIS METHOD IS EDITOR ONLY.
  OnDrawGizmosSelected: This method is called when the editor draws the gizmos for an instance of <this> that is selected in the Inspector. THIS METHOD IS EDITOR ONLY.
  ToString: default.
+ OnGUI: This method is called whenever the Unity editor attempts to draw the <this> GUI to the inspector.
