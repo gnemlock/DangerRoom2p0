@@ -12,6 +12,7 @@ namespace Narrative
     [System.Serializable]
     public struct Dialogue
     {
+        public string dialogueName;
         public DialogueLine[] lines;
     }
     

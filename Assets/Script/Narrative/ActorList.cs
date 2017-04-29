@@ -7,10 +7,12 @@ using UnityEditor;
 
 namespace Narrative
 {
-    public class ActorList : MonoBehaviour
+    public class ActorList : MonoBehaviour, IGameManagerInteractable
     {
-        public static ActorList hive;
+        public static ActorList source;
+        
         public ActorListing[] actors;
+        
         public int length
         { 
             get 
@@ -26,14 +28,16 @@ namespace Narrative
             } 
         }
         
-        private void Awake()
+        public static string name { get { return "ActorList"; } }
+        
+       /* private void Awake()
         {
-            if(hive == null)
+            if(source == null)
             {
-                hive = this;
-                DontDestroyOnLoad(gameObject);
+                source = this;
+                DontDestroyOnLoad(this);
             }
-            else if(hive != this)
+            else if(source != this)
             {
                 #if UNITY_EDITOR
                 DestroyImmediate(this);
@@ -41,7 +45,7 @@ namespace Narrative
                 Destroy(this);
                 #endif
             }
-        }
+        }*/
         
         public ActorListing this[int index]
         {
@@ -55,8 +59,6 @@ namespace Narrative
             }
         }
     }
-    
-    
 
     [System.Serializable]
     public class ActorListing
