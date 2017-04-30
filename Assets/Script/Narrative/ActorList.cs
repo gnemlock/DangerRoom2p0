@@ -7,6 +7,7 @@ using UnityEditor;
 
 namespace Narrative
 {
+    [System.Serializable]
     public class ActorList : MonoBehaviour, IGameManagerInteractable
     {
         public static ActorList source;
@@ -27,8 +28,6 @@ namespace Narrative
                 }
             } 
         }
-        
-        public static string name { get { return "ActorList"; } }
         
        /* private void Awake()
         {
@@ -65,7 +64,8 @@ namespace Narrative
     {
         public string name;
         public Color colour;
-        public Sprite backingImage;
+        public Sprite backingSprite;
+        public Sprite actorSprite;
         public Font font;
 
         #if UNITY_EDITOR
@@ -74,7 +74,9 @@ namespace Narrative
             name = EditorGUILayout.TextField("Name: ", name);
             colour = EditorGUILayout.ColorField("Text Colour: ", colour);
             font = (Font)EditorGUILayout.ObjectField("Text Font: ", font, typeof(Font), false);
-            backingImage = (Sprite)EditorGUILayout.ObjectField("Backing Image: ", backingImage, 
+            actorSprite = (Sprite)EditorGUILayout.ObjectField("Actor Image: ", actorSprite, 
+                typeof(Sprite), false);
+            backingSprite = (Sprite)EditorGUILayout.ObjectField("Backing Image: ", backingSprite, 
                 typeof(Sprite), false);
         }
         #endif

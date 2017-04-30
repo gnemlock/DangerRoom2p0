@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Narrative
 {
-    public class Script : MonoBehaviour
+    public class NarrativeScript : MonoBehaviour
     {
         public Dialogue[] dialogue;
     }

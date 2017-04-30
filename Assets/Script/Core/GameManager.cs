@@ -15,6 +15,7 @@ using UnityEditor;
 public class GameManager : MonoBehaviour
 {
     public static GameManager instance;
+    public int targetComponent;
     
     [SerializeField] public IGameManagerInteractable[] interactableComponents;
     
@@ -55,6 +56,7 @@ public class GameManager : MonoBehaviour
     #if UNITY_EDITOR
     public int AttachInteractable(IGameManagerInteractable interactable)
     {
+        Debug.Log("attaching ");
         try
         {
             Array.Resize(ref interactableComponents, interactableComponents.Length + 1);
@@ -67,19 +69,20 @@ public class GameManager : MonoBehaviour
         interactableComponents[interactableComponents.Length - 1] = interactable;
         
         return interactableComponents.Length - 1;
-         }
+    }
     
-    public IGameManagerInteractable FindInteractable(string name)
+    public IGameManagerInteractable FindInteractable(System.Type type)
     {
         if(interactableComponents != null)
         {
-            foreach(IGameManagerInteractable interactable in interactableComponents)
+            for(int i = 0; i < interactableComponents.Length; i++)
             {
-                Debug.Log(interactable.name + " " + name);
+                Debug.Log(interactableComponents[i].GetType().ToString() + " " + type.ToString() 
+                    + " " + (interactableComponents[i].GetType() == type));
                 
-                if(interactable.name == name)
+                if(interactableComponents[i].GetType() == type)
                 {
-                    return interactable;
+                    return interactableComponents[i];
                 }
             }
         }
@@ -97,6 +100,21 @@ public class GameManager : MonoBehaviour
         Array.Resize(ref interactableComponents, interactableComponents.Length - 1);
     }
     
+    public void OutputComponentList()
+    {
+        if(interactableComponents == null)
+        {
+            Debug.Log("No components");
+        }
+        else
+        {
+            for(int i = 0; i < interactableComponents.Length; i++)
+            {
+                Debug.Log(i + ": " + interactableComponents[i].GetType().ToString());
+            }
+        }
+    }
+    
     public void OutputComponentsToDebug()
     {
         if(interactableComponents != null)
@@ -112,14 +130,11 @@ public class GameManager : MonoBehaviour
 
 public interface IGameManagerInteractable
 {
-    string name { get; }
 }
 
 public interface IGameManagerUpdatable
 {
     void Update();
-    
-    string name { get; }
 }
 
 #if UNITY_EDITOR
@@ -130,11 +145,20 @@ public class GameManagerEditor : Editor
     {
         DrawDefaultInspector();
         
+        GameManager gameManager = target as GameManager;
         if(GUILayout.Button("Output to Debug"))
-        {
-            GameManager gameManager = target as GameManager;
-            
+        {            
             gameManager.OutputComponentsToDebug();
+        }
+        
+        if(GUILayout.Button("Print Component List"))
+        {
+            gameManager.OutputComponentList();
+        }
+        
+        if(GUILayout.Button("Remove Target Component"))
+        {
+            gameManager.RemoveInteractable(gameManager.targetComponent);
         }
     }
 }
