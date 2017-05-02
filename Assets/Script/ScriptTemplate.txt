@@ -54,6 +54,8 @@ public static class <ClassName>Dimensions as Dimensions
 #if UNITY_EDITOR
  - dimensions for use in drawing objects in the inspector
  
+ ImplementSingletonStructure: This method should be called upon creation of an instance of <this> to ensure singleton implementation.
+ Update: This method will be called at the start of each frame where this instance of <this> is enabled.
  Start: This method will be called just before the first Update call.
  Awake: This method will be called when this instance of <this> is loaded.
  OnDestroy: This method will be called when this instance of <this> is unloaded.
@@ -63,4 +65,5 @@ public static class <ClassName>Dimensions as Dimensions
  OnDrawGizmos: This method is called when the editor draws the gizmos for an instance of <this>. THIS METHOD IS EDITOR ONLY.
  OnDrawGizmosSelected: This method is called when the editor draws the gizmos for an instance of <this> that is selected in the Inspector. THIS METHOD IS EDITOR ONLY.
  ToString: default.
- OnGUI: This method is called whenever the Unity editor attempts to draw the <this> GUI to the inspector.
+ OnGUI: This method is called whenever the Unity editor attempts to draw the <this> GUI to the inspector. THIS METHOD IS EDITOR ONLY
+    -> This method should be called to draw the <this> GUI to the inspector via a seperate OnGUI method. THIS METHOD IS EDITOR ONLY

@@ -22,22 +22,17 @@ public class GameManager : MonoBehaviour
     #if UNITY_EDITOR
     public GameManager()
     {
-        if(instance == null)
-        {
-            instance = this;
-        }
-        else if(instance != this)
-        {
-            #if UNITY_EDITOR
-            DestroyImmediate(this);
-            #else
-            Destroy(this);
-            #endif
-        }
+        ImplementSingletonStructure();
     }
     #endif
 
     private void Awake()
+    {
+        ImplementSingletonStructure();
+    }
+    
+    
+    private void ImplementSingletonStructure()
     {
         if(instance == null)
         {

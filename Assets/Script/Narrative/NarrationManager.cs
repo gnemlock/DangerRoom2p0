@@ -6,10 +6,11 @@ namespace Narrative
 {
     public class NarrationManager : MonoBehaviour
     {
-        public static NarrationManager instance;
         public ActorList mainActorList;
         public NarrativeScript script;
         public ScrollingDialogue dialogueUI;
+        
+        public static NarrationManager instance { get; private set; }
     
         #if UNITY_EDITOR
         public NarrationManager()
@@ -44,7 +45,7 @@ namespace Narrative
             this.mainActorList = mainActorList;
         }
         
-        public ActorListing GetActorListing(int actorID)
+        public Actor GetActorListing(int actorID)
         {
             return mainActorList[actorID];
         }

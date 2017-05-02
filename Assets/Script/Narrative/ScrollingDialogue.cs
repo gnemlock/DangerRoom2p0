@@ -9,13 +9,14 @@ namespace Narrative
     #if UNITY_EDITOR
     using Tooltips = Narrative.Utility.ScrollingDialogueTooltips;
     #endif
-    
+
     //TODO:Allow Text Speeding(perhaps convert keypress to key up, and implement as keyhold)
     //TODO:Figure out why text is not printing
     //TODO:Sort out default prefab
     //TODO:Sort out resolution changes
     //TODO:Documentation
-    
+    //TODO:Implement default sprites
+
     [RequireComponent(typeof(Text))] public class ScrollingDialogue : MonoBehaviour
     {
         /// <summary>The <see cref="UnityEngine.UI.Text"/> element to print text to.</summary>
@@ -38,12 +39,10 @@ namespace Narrative
         /// <summary>The intended time between printing each character, in seconds, when printing 
         /// has been sped up.</summary>
         [Tooltip(Tooltips.characterFastPacing)] public float characterFastPacing = 0.1f;
-        /// <summary>The current <see cref="Narrative.Dialogue"/> script being read from.</summary>
-        [Tooltip(Tooltips.script)] public Dialogue script;
         /// <summary>The <see cref="UnityEngine.KeyCode"/> used to trigger fast scrolling, 
         /// line completion and next line.</summary>
         [Tooltip(Tooltips.nextLineKey)] public KeyCode nextLineKey;
-        
+
         /// <summary>The current dialogue being displayed to the 
         /// <see cref="Narrative.ScrollingDialogue.text"/> element.</summary>
         private string currentDialogue = "";
@@ -67,12 +66,14 @@ namespace Narrative
         /// <summary>The current line index in the <see cref="Narrative.ScrollingDialogue.script"/> 
         /// being read from.</summary>
         private int currentLineIndex = 0;
+        /// <summary>The current <see cref="Narrative.Dialogue"/> script being read from.</summary>
+        private Dialogue script;
         /// <summary>A locally cached dictionary of <see cref="Narrative.ActorListing"/>s specific 
         /// to the current <see cref="Narrative.ScrollingDialogue.script"/>.</summary>
         /// <remarks>The <see cref="Narrative.ActorListing"/>s are stored with an <see cref="int"/> 
         /// key, so they may still be accessed by their original position in the larger 
         /// <see cref="Narrative.ActorList"/>.</remarks>
-        private Dictionary<int, ActorListing> localActorList;
+        private Dictionary<int, Actor> localActorList;
         /// <summary>The name of the current actor associated with the 
         /// <see cref="Narrative.ScrollingDialogue.currentLineIndex"/> in the current 
         /// <see cref="Narrative.ScrollingDialogue.script"/>.</summary>
@@ -81,16 +82,25 @@ namespace Narrative
         /// empty.</remarks>
         private string currentActor;
 
+        /// <summary>This method will be called when this instance of 
+        /// <see cref="Narrative.ScrollingDialogue"/> is loaded.</summary>
         private void Awake()
         {
+            // Reset the reader to ensure all parameters start at their appropriate values.
             ResetReader();
+            // For testing purposes, start the dialogue immediately.
             StartScrollingDialogue(NarrationManager.instance.script.dialogue[0]);
         }
-        
+
+        /// <summary>This method will be called at the start of each frame where this instance of 
+        /// <see cref="Narrative.ScrollingDialogue"/> is enabled.</summary>
         private void Update()
         {
             if(canReadNextLine)
             {
+                // If the ScrollingDialogue is flagged to read the next line, reset the flag 
+                // so it does not attempt to read the next line on the next Update frame, and start 
+                // the "ReadLine" coroutine to start reading the next line.
                 canReadNextLine = false;
                 StartCoroutine("ReadLine");
             }
@@ -134,7 +144,7 @@ namespace Narrative
         /// <param name="actorID">New Actor ID.</param>
         public void SetActor(int actorID)
         {
-            ActorListing actor;
+            Actor actor;
             localActorList.TryGetValue(actorID, out actor);
             currentActor = actor.name;
 
@@ -231,7 +241,7 @@ namespace Narrative
         public void StartScrollingDialogue(Dialogue dialogue)
         {
             script = dialogue;
-            localActorList = new Dictionary<int, ActorListing>();
+            localActorList = new Dictionary<int, Actor>();
 
             for(int i = 0; i < dialogue.lines.Length; i++)
             {
@@ -267,7 +277,6 @@ namespace Narrative.Utility
     {
         public const string characterPacing = "Regular time between characters, in seconds.";
         public const string characterFastPacing = "Sped up time between characters, in seconds.";
-        public const string script = "The current script being read from.";
         public const string nextLineKey = "The key used to skip to the end of the line,"
             + " or move to the next.";
         public const string text = "The Text UI to display dialogue to.";
