@@ -42,6 +42,7 @@ namespace Narrative
         /// <summary>The <see cref="UnityEngine.KeyCode"/> used to trigger fast scrolling, 
         /// line completion and next line.</summary>
         [Tooltip(Tooltips.nextLineKey)] public KeyCode nextLineKey;
+        public float fastForwardDelay = 0.5f;
 
         /// <summary>The current dialogue being displayed to the 
         /// <see cref="Narrative.ScrollingDialogue.text"/> element.</summary>
@@ -66,6 +67,8 @@ namespace Narrative
         /// <summary>The current line index in the <see cref="Narrative.ScrollingDialogue.script"/> 
         /// being read from.</summary>
         private int currentLineIndex = 0;
+        private float lastInputTime;
+        private bool fastForward;
         /// <summary>The current <see cref="Narrative.Dialogue"/> script being read from.</summary>
         private Dialogue script;
         /// <summary>A locally cached dictionary of <see cref="Narrative.ActorListing"/>s specific 
@@ -107,14 +110,32 @@ namespace Narrative
             
             if(Input.GetKeyDown(nextLineKey))
             {
-                if(waitingForNextLine)
+                // If the user presses the nextLineKey down, log the time, so we know if the 
+                // we are skipping to the next line or fast forwarding.
+                lastInputTime = Time.time;
+            }
+            else if(Input.GetKey(nextLineKey))
+            {
+                if((Time.time - lastInputTime) >= fastForwardDelay)
                 {
-                    MoveToNextLine();
+                    fastForward = true;
                 }
-                else
+            }
+            else if(Input.GetKeyUp(nextLineKey))
+            {
+                if((Time.time - lastInputTime) < fastForwardDelay)
                 {
-                    CompleteCurrentLine();
+                    if(waitingForNextLine)
+                    {
+                        MoveToNextLine();
+                    }
+                    else
+                    {
+                        CompleteCurrentLine();
+                    }
                 }
+
+                fastForward = false;
             }
         }
         
@@ -216,7 +237,8 @@ namespace Narrative
                 currentDialogue += line[currentCharacterIndex];
                 UpdateText();
                 currentCharacterIndex++;
-                yield return new WaitForSeconds(characterPacing);
+                float waitTime = (fastForward ? characterFastPacing : characterPacing);
+                yield return new WaitForSeconds(waitTime);
             }
             
             waitingForNextLine = true;

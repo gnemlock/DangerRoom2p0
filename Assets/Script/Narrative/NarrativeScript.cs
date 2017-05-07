@@ -10,7 +10,7 @@ namespace Narrative
 
     /// <summary>A singleton class designed to store all of the narrative-based script 
     /// for use in a game.</summary>
-    public class NarrativeScript : MonoBehaviour
+    [ExecuteInEditMode] public class NarrativeScript : MonoBehaviour
     {
         /// <summary>Represents all of the <see cref="Narrative.Dialogue"/> used in the 
         /// game.</summary>
@@ -34,16 +34,6 @@ namespace Narrative
         /// no additional practical use, as the <see cref="Narrative.NarrativeScript"/> should be 
         /// directly accessed through the Editor.</remarks>
         private static NarrativeScript instance;
-
-        #if UNITY_EDITOR
-        /// <summary>Initializes a new instance of the <see cref="Narrative.NarrativeScript"/> 
-        /// class.</summary>
-        public NarrativeScript()
-        {
-            // Ensure singleton implementation.
-            ImplementSingletonStructure();
-        }
-        #endif
 
         /// <summary>This method will be called when this instance of 
         /// <see cref="Narrative.NarrativeScript"/> is loaded.</summary>

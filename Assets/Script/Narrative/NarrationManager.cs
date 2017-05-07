@@ -4,20 +4,13 @@ using UnityEngine;
 
 namespace Narrative
 {
-    public class NarrationManager : MonoBehaviour
+    [ExecuteInEditMode] public class NarrationManager : MonoBehaviour
     {
         public ActorList mainActorList;
         public NarrativeScript script;
         public ScrollingDialogue dialogueUI;
         
         public static NarrationManager instance { get; private set; }
-    
-        #if UNITY_EDITOR
-        public NarrationManager()
-        {
-            ImplementSingletonStructure();
-        }
-        #endif
     
         private void Awake()
         {

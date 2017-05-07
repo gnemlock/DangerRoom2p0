@@ -39,6 +39,4 @@ Assets/Blink.cs.meta
 Assets/BMW.png
 Assets/Resources/ActorListing.txt
 Assets/GDSE_Resource.meta
-Assets/GDSE_Resource/TestGMComp.cs
-Assets/GDSE_Resource/TestGMComp.cs.meta
-Assets/GDSE_Resource/Vector3Test.cs
+Assets/GDSE_Resource/*

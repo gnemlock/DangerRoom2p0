@@ -12,19 +12,12 @@ using UnityEditor;
 //TODO:Convert components to ScriptableObject
 //TODO:Implement serialisation in ScriptableObjects
 
-public class GameManager : MonoBehaviour
+[ExecuteInEditMode] public class GameManager : MonoBehaviour
 {
     public static GameManager instance;
     public int targetComponent;
     
     [SerializeField] public IGameManagerInteractable[] interactableComponents;
-    
-    #if UNITY_EDITOR
-    public GameManager()
-    {
-        ImplementSingletonStructure();
-    }
-    #endif
 
     private void Awake()
     {
@@ -51,7 +44,6 @@ public class GameManager : MonoBehaviour
     #if UNITY_EDITOR
     public int AttachInteractable(IGameManagerInteractable interactable)
     {
-        Debug.Log("attaching ");
         try
         {
             Array.Resize(ref interactableComponents, interactableComponents.Length + 1);
