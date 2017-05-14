@@ -30,20 +30,20 @@ public static class <ClassName>Tooltips As Tooltips
  - tooltips for public variables
 
 // Used to store strings used for labelling buttons, "Prepare Change" descriptions and game objects.
-public static partial class <NameSpace>Labels AS Labels
+public static partial class <NameSpace>EditorLabels AS EditorLabels
 #if UNITY_EDITOR
  - labels for use in the editor:
    - button labels
    - "Prepare Change" labels
-#else
- - labels for use in naming game objects
 
 public class <ClassName>Editor : Editor
 #if UNITY_EDITOR
  - all custom editor logic
  
-public static partial class <NameSpace>Tags As Tags
+public static partial class <NameSpace>GameLabels As GameLabels
  - stores tags for use in tag comparison
+ - labels for use in naming game objects
+ - input labels
   
 public static class <ClassName>Colours as Colours
 #if UNITY_EDITOR
@@ -51,6 +51,9 @@ public static class <ClassName>Colours as Colours
   - static instead of constant
 
 public static class <ClassName>Dimensions as Dimensions
+ - game dimensions
+ - indexes
+   - layer indexes
 #if UNITY_EDITOR
  - dimensions for use in drawing objects in the inspector
  
