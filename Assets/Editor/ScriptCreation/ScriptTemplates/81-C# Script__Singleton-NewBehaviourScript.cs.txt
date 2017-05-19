@@ -1,0 +1,111 @@
+﻿/* Created by Matthew Francis Keating */
+
+using UnityEngine;
+
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
+namespace #NAMESPACE#
+{
+    using StringFormats = Utility.#namespace#StringFormats;
+    using Labels = Utility.#namespace#Labels;
+    using Log = Utility.#namespace#Debug;
+    using Tags = Utility.#namespace#Tags;
+
+    #if UNITY_EDITOR
+    using Tooltips = Utility.#SCRIPTNAME#Tooltips;
+    using Colours = Utility.#SCRIPTNAME#Colours;
+    using Dimensions = Utility.#SCRIPTNAME#Dimensions;
+    #endif
+
+    /// <summary> </summary>
+    public class #SCRIPTNAME# : MonoBehaviour 
+    {
+        /// <summary>Provides direct access to the singleton 
+        /// <see cref="#NAMESPACE#.#SCRIPTNAME#"/></summary>
+        public static #SCRIPTNAME# instance;
+
+        /// <summary>This method will be called when this instance of 
+        /// <see cref="#NAMESPACE#.#SCRIPTNAME#"/> is loaded.</summary>
+        void Awake()
+        {
+            ImplementSingletonStructure();
+        }
+
+        /// <summary>This method will be called at the start of each frame where this instance 
+        /// of <see cref="#NAMESPACE#.#SCRIPTNAME#"/> is enabled.</summary>
+        void Update ()
+        {
+            #NOTRIM#
+        }
+
+        /// <summary>Enforces the Singleton class structure on this instance of 
+        /// <see cref="#NAMESPACE#.#SCRIPTNAME#"/>.<summary>
+        private void ImplementSingletonStructure()
+        {
+            if(instance == null)
+            {
+                instance = this;
+            }
+            else if(instance != this)
+            {
+                #if UNITY_EDITOR
+                DestroyImmediate(this);
+                #else
+                Destroy(this);
+                #endif
+            }
+        }
+    }
+}
+
+namespace #NAMESPACE#.Utility
+{
+    [CustomEditor(typeof(#SCRIPTNAME#))] public class #SCRIPTNAME#Editor : Editor
+    {
+        public override void OnInspectorGUI()
+        {
+            DrawDefaultInspector();
+
+            #SCRIPTNAME# #scriptname# = target as #SCRIPTNAME#;
+        }
+    }
+
+    #if UNITY_EDITOR
+    // Strings used to generate tooltips for the editor.
+    public static class #SCRIPTNAME#Tooltips
+    {
+    }
+
+    // Colours for use in displaying custom editor GUI.
+    public static class #SCRIPTNAME#Colours
+    {
+    }
+
+    // Dimensions for use in displaying custom editor GUI.
+    public static class #SCRIPTNAME#Dimensions
+    {
+    }
+    #endif
+
+    // Strings containing format for string interface display.
+    public static partial class #namespace#StringFormats
+    {
+    }
+    
+    // Strings used for general labelling.
+    public static partial class #namespace#Labels
+    {
+    }
+    
+    // Provides debug functionality, including methods and customised string messages.
+    public static partial class #namespace#Debug
+    {
+    }
+    
+    // Strings used for tag or name comparison
+    public static partial class #namespace#Tags
+    {
+    }
+}

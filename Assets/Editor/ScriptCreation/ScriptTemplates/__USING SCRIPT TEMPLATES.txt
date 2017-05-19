@@ -1,0 +1,35 @@
+﻿To enable templates, copy them to your "Resources/ScriptTemplates" folder, in the
+base Unity directory.
+
+This is typically "C:/ProgramFiles/Unity/Editor/Data/Resources/ScriptTemplates".
+
+Template names follow the format of "ID-MENU_MENUOPTION-DEFAULTNAME.txt".
+
+ - ID does not *appear* to be discriminative. You can, and will, have multiple templates
+   with the same ID. As such, the only recommendation is to use the same ID for all 
+   templates of the same generic type, i.e, C# script or JavaScript files.
+ - MENU denotes the menu directory for the template, when the user selects "Create" 
+   from within the Project view. You can specify additonal sub menus using further 
+   underscores; "MENU_SUBMENU" places the option under "Create > MENU > SUBMENU".
+   Spaces are permitted.
+ - MENUOPTION denotes the actual menu listing, within the specified MENU directory. 
+   This is the option you will actually click on to create a script of the desired 
+   template. Spaces are permitted.
+ - DEFAULTNAME denotes the default name the new asset will take. This is only a 
+   formality, as you should be specifying a name when you create the asset. Regardless, 
+   ensure you include the correct file extension. C# script names, for example, 
+   should end in ".cs".
+   
+There are generic templates already provided in the templates folder. You can override
+these templates, but DO NOT rename them. They are referenced by name, internally, and 
+altering the name can break Unity.
+
+For example, the generic MonoBehaviour template "C# Script-NewBehaviourScript.cs.txt" 
+is used to create default C# scripts, and more importantly, when we create a C# script 
+from the "Add Component" menu, while inspecting a game object. If this script can not 
+be found, by name, you will not be able to create C# scripts in this way.
+
+You can copy and paste the templates found in this folder to your own templates folder, 
+without any perceived issue. Please keep in mind that they include further editing 
+directives; as such, they will not work as intended unless you include the accompanying 
+ScriptCreation Editor scripts.

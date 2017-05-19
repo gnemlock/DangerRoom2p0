@@ -1,0 +1,61 @@
+﻿/* Created by Matthew Francis Keating */
+
+using UnityEngine;
+
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
+namespace #NAMESPACE#
+{
+    using StringFormats = #NAMESPACE#StringFormats;
+    using Labels = #NAMESPACE#Labels;
+    using Log = #NAMESPACE#Debug;
+    using Tags = #NAMESPACE#Tags;
+
+    #if UNITY_EDITOR
+    using Tooltips = #NAMESPACE#Tooltips;
+    using Colours = #NAMESPACE#Colours;
+    using Dimensions = #NAMESPACE#Dimensions;
+    #endif
+}
+
+namespace #NAMESPACE#.Utility
+{
+    #if UNITY_EDITOR
+    // Strings used to generate tooltips for the editor.
+    public static class #NAMESPACE#Tooltips
+    {
+    }
+
+    // Colours for use in displaying custom editor GUI.
+    public static class #NAMESPACE#Colours
+    {
+    }
+
+    // Dimensions for use in displaying custom editor GUI.
+    public static class #NAMESPACE#Dimensions
+    {
+    }
+    #endif
+
+    // Strings containing format for string interface display.
+    public static partial class #NAMESPACE#StringFormats
+    {
+    }
+    
+    // Strings used for general labelling.
+    public static partial class #NAMESPACE#Labels
+    {
+    }
+    
+    // Provides debug functionality, including methods and customised string messages.
+    public static partial class #NAMESPACE#Debug
+    {
+    }
+    
+    // Strings used for tag or name comparison
+    public static partial class NAMESPACETags
+    {
+    }
+}

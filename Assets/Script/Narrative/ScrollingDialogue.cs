@@ -92,7 +92,7 @@ namespace Narrative
             // Reset the reader to ensure all parameters start at their appropriate values.
             ResetReader();
             // For testing purposes, start the dialogue immediately.
-            StartScrollingDialogue(NarrationManager.instance.script.dialogue[0]);
+            // StartScrollingDialogue(NarrationManager.instance.script.dialogue[0]);
         }
 
         /// <summary>This method will be called at the start of each frame where this instance of 
