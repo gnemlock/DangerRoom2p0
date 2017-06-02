@@ -21,9 +21,9 @@ namespace DataStructures
         /// will be pushed to the end. If the <see cref="System.Array"/> is extended, trailing 
         /// data will be replaced with the types default value. The <see cref="System.Array"/> 
         /// will be initialised, if it has not been already initialised.</remarks>
-        public static void ResizeForwardArray<T>(ref T[] array, int newSize)
+        public static void ResizeArrayWithGravity<T>(ref T[] array, int newSize)
         {
-            ResizeForwardArray<T>(ref array, newSize, default(T));
+            ResizeArrayWithGravity<T>(ref array, newSize, default(T));
         }
 
         /// <summary>Resizes an <see cref="System.Array"/> while retaining the data at the end of 
@@ -40,7 +40,7 @@ namespace DataStructures
         /// will be pushed to the end. If the <see cref="System.Array"/> is extended, trailing 
         /// data will be replaced with defaultValue. The <see cref="System.Array"/> will be 
         /// initialised, if it has not been already initialised.</remarks>
-        public static void ResizeForwardArray<T>(ref T[] array, int newSize, T defaultValue)
+        public static void ResizeArrayWithGravity<T>(ref T[] array, int newSize, T defaultValue)
         {
             if(array == null)
             {
@@ -134,7 +134,7 @@ namespace DataStructures
             }
         }
 
-        public static void TestForwardArrayAdjustment(int minimumSize = 1, int maximumSize = 5, 
+        public static void TestGravityArrayAdjustment(int minimumSize = 1, int maximumSize = 5, 
             bool testIncrease = true, bool testDecrease = true)
         {
             if(!testIncrease && !testDecrease)
@@ -192,7 +192,7 @@ namespace DataStructures
 
                     if(testIncrease)
                     {
-                        ResizeForwardArray<int>(ref testArray, j);
+                        ResizeArrayWithGravity<int>(ref testArray, j);
 
                         arrayOutput += ArrayToString(testArray) 
                             + (testDecrease ? StringFormats.sizeDown : "");
@@ -200,7 +200,7 @@ namespace DataStructures
 
                     if(testDecrease)
                     {
-                        ResizeForwardArray<int>(ref testArray, i);
+                        ResizeArrayWithGravity<int>(ref testArray, i);
 
                         arrayOutput += testArray.ToString();
                     }

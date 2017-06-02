@@ -23,8 +23,7 @@ using UnityEditor;
     {
         ImplementSingletonStructure();
     }
-    
-    
+
     private void ImplementSingletonStructure()
     {
         if(instance == null)

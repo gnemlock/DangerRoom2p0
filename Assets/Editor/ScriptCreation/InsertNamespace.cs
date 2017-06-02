@@ -32,14 +32,19 @@ public class InsertNamespace : UnityEditor.AssetModificationProcessor
 
         // Create a string array containing each directory, in the asset path.
         string[] splitAssetPath = assetPath.Split('/');
+		string namespacePath;
+        string namespaceName;
 
         if(!CompareAgainstBaseDirectory(splitAssetPath))
         {
-            return;
+            namespacePath = "";
+            namespaceName = "";
         }
-
-        string namespacePath = ConvertToNamespacePath(splitAssetPath);
-        string namespaceName = namespacePath.Replace(".", "");
+        else
+        {
+            namespacePath = ConvertToNamespacePath(splitAssetPath);
+            namespaceName = namespacePath.Replace(".", "");
+        }
 
         // Create a placeholder, and store the script as a single string.
         string finalCode = string.Join("\n", File.ReadAllLines(assetPath));
