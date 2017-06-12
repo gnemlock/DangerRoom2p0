@@ -1,4 +1,6 @@
-﻿// Created by Matthew F Keating with the help of Catlike Coding Tutorials.
+﻿// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
+
+// Created by Matthew F Keating with the help of Catlike Coding Tutorials.
 //  --- http://catlikecoding.com/unity/tutorials/rendering/part-3 ---
 
 "Custom/Textured With Detail"
@@ -41,7 +43,7 @@
             {
                 Interpolators interpolators;
 
-                interpolators.position = mul(UNITY_MATRIX_MVP, vertexData.position);
+                interpolators.position = UnityObjectToClipPos(vertexData.position);
                 interpolators.uv = TRANSFORM_TEX(vertexData.uv, _MainTex);
                 interpolators.uvDetail = TRANSFORM_TEX(vertexData.uv, _DetailTex);
 

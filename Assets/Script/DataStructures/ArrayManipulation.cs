@@ -240,7 +240,7 @@ namespace DataStructures.Utility
         public static void TestingForNoChanges()
         {
             Debug.LogWarning(testingForNoChangesWarning);
-                 }
+        }
     }
 
     public static partial class DataStructuresStringFormats

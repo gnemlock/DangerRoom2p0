@@ -47,6 +47,8 @@ namespace Debugging.Physics
             // Cache the local Rigidbody.
             rigidbody = GetComponent<Rigidbody>();
 
+            velocitySamples = new float[sampleSize];
+
             // Start the LateFixedUpdate Coroutine to allow calculations at the end of each 
             // FixedUpdate method.
             StartCoroutine(LateFixedUpdate());
@@ -188,7 +190,7 @@ namespace Debugging.Physics.Utility
         void OnEnable()
         {
             AdjustInternalMeasurements();
-            material = new Material(Shader.Find("Hidden/Internal-Colored"));
+            material = new Material(Shader.Find(DebuggingPhysicsLabels.shaderName));
         }
         
         private void OnDisable()
@@ -198,43 +200,114 @@ namespace Debugging.Physics.Utility
 
         public override void OnInspectorGUI()
         {
+            // Draw the default inspector.
             DrawDefaultInspector();
 
-            /*VelocityGrapher velocityGrapher = target as VelocityGrapher;
+            // Cache a local reference to the velocityGrapher
+            VelocityGrapher velocityGrapher = target as VelocityGrapher;
 
             if(GUILayout.Button(DebuggingPhysicsLabels.testArrays))
             {
+                // Draw a button, and if the user clicks it, run the array tests.
                 DataStructures.ArrayManipulation.TestGravityArrayAdjustment();
             }
 
-            if(GUILayout.Button("TestOutput"))
-            {
-                Debug.Log(Screen.width); // < definately pings back the inspector width
-            }
+            // Begin to draw a horizontal layout, using the helpBox EditorStyle
+            GUILayout.BeginHorizontal(EditorStyles.helpBox);
 
-            GUILayout.BeginHorizontal(EditorStyles.helpBox);*/
-            
-            Rect rect = GUILayoutUtility.GetRect(10,10000,200,200);
+            // Reserve GUI space with a width from 10 to 10000, and a fixed height of 200, and 
+            // cache it as a rectangle.
+            Rect layoutRectangle = GUILayoutUtility.GetRect(10,10000,200,200);
+
             if(Event.current.type == EventType.Repaint)
             {
-                Debug.Log("Drawing");
-                GUI.BeginClip(rect);
-                GL.Viewport(rect);
-                GL.LoadPixelMatrix(0, rect.width, rect.height, 0);
-                GL.Clear(true, true, Color.red);
+                // If we are currently in the Repaint event, begin to draw a clip of the size of 
+                // previously reserved rectangle, and push the current matrix for drawing.
+                GUI.BeginClip(layoutRectangle);
+                GL.PushMatrix();
+
+                // Clear the current render buffer, setting a new background colour, and set our
+                // material for rendering.
+                GL.Clear(true, false, VelocityGrapherColours.backgroundColour);
                 material.SetPass(0);
 
-                GL.Begin(GL.LINES);
-                GL.Color(Color.black);
-                GL.Vertex3(200, 0, 0);
-                GL.Vertex3(200, 10000, 0);
-                GL.Vertex3(0, 10000, 0);
+                // Start drawing in OpenGL Quads, to draw the background canvas. Set the 
+                // backgroundColour as the current OpenGL drawing colour, and draw a quad covering
+                // the dimensions of the layoutRectangle.
+                GL.Begin(GL.QUADS);
+                GL.Color(VelocityGrapherColours.backgroundColour);
                 GL.Vertex3(0, 0, 0);
+                GL.Vertex3(layoutRectangle.width, 0, 0);
+                GL.Vertex3(layoutRectangle.width, layoutRectangle.height, 0);
+                GL.Vertex3(0, layoutRectangle.height, 0);
                 GL.End();
+
+                // Start drawing in OpenGL Lines, to draw the lines of the grid.
+                GL.Begin(GL.LINES);
+
+                // Store measurement values to determine the offset, for scrolling animation, 
+                // and the line count, for drawing the grid.
+                int offset = (Time.frameCount * 2) % 50;
+                int count = (int)(layoutRectangle.width / 10) + 20;
+
+                for(int i = 0; i < count; i++)
+                {
+                    // For every line being drawn in the grid, create a colour placeholder; if the 
+                    // current index is divisible by the MinorSegmentCount, we are at a major 
+                    // segment line; set this colour to the majorGridColour. If the current index 
+                    // is not divisible by the MinorSegmentCount, we are at a minor segment line; 
+                    // set this colour to the minorGridColour. Set the derived colour as the 
+                    // current OpenGL drawing colour.
+                    Color lineColour 
+                        = (i % VelocityGrapherDimensions.velocityGrapherMinorSegmentCount == 0 ?
+                        VelocityGrapherColours.majorGridColour 
+                        : VelocityGrapherColours.minorGridColour);
+                    GL.Color(lineColour);
+
+                    // Derive a new x co-ordinate from the initial index, converting it straight 
+                    // into line positions, and move it back to adjust for the animation offset.
+                    float x = i * 10 - offset;
+
+                    if (x >= 0 && x < layoutRectangle.width)
+                    {
+                        // If the current derived x position is within the bounds of the rectangle, 
+                        // draw another vertical line.
+                        GL.Vertex3(x, 0, 0);
+                        GL.Vertex3(x, layoutRectangle.height, 0);
+                    }
+
+                    if (i < layoutRectangle.height / 10)
+                    {
+                        // Convert the current index value into a y position, and if it is within 
+                        // the bounds of the rectangle, draw another horizontal line.
+                        GL.Vertex3(0, i * 10, 0);
+                        GL.Vertex3(layoutRectangle.width, i * 10, 0);
+                    }
+                }
+
+                // End lines drawing.
+                GL.End();
+
+                // Start drawing in OpenGL LineStrip, to draw the graphed lines.
+                GL.Begin(GL.LINE_STRIP);
+
+                for(int i = 0; i < velocityGrapher.velocitySamples.Length; i++)
+                {
+                    float currentValue = velocityGrapher.velocitySamples[i];
+
+                    GL.Color(DetermineLineColour(currentValue, velocityGrapher));
+                    GL.Vertex3(i * 2, layoutRectangle.height - currentValue, 0);
+                }
+
+                GL.End();
+
+                // Pop the current matrix for rendering, and end the drawing clip.
+                GL.PopMatrix();
                 GUI.EndClip();
             }
-            
-            //GUILayout.EndHorizontal();
+
+            // End our horizontal 
+            GUILayout.EndHorizontal();
         }
 //TODO:Account for cases where user provides a minimumvelocity higher than their maximumvelocity
         private void AdjustInternalMeasurements()
@@ -260,6 +333,15 @@ namespace Debugging.Physics.Utility
 
             float velocityBreadth = maximumVelocity - minimumVelocity;
             horizontalIncrement = velocityBreadth / VelocityGrapherDimensions.velocityGrapherHeight;
+        }
+
+        private Color DetermineLineColour(float pointValue, VelocityGrapher velocityGrapher)
+        {
+            float minimumValue = velocityGrapher.minimumVelocity;
+            float maximumValue = velocityGrapher.maximumVelocity;
+
+            return ((pointValue == minimumValue || pointValue == maximumValue) ? 
+                VelocityGrapherColours.outOfRangeColour : VelocityGrapherColours.lineColour);
         }
 
         private void DrawVelocityGraph(float[] velocityValues, float minimumVelocity, 
@@ -299,9 +381,12 @@ namespace Debugging.Physics.Utility
 
     public static class VelocityGrapherColours
     {
-        public static Color lineColour = Color.blue;
-        public static Color outOfRangeColour = Color.red;
-        public static Color zeroLineColour = Color.white;
+        public static Color lineColour = new Color(0f, 0f, 1f);
+        public static Color outOfRangeColour = new Color(1f, 0f, 0f);
+        public static Color zeroLineColour = new Color(1f, 1f, 1f);
+        public static Color backgroundColour = new Color(0f, 0f, 0f);
+        public static Color minorGridColour = new Color(0.2f, 0.2f, 0.2f);
+        public static Color majorGridColour = new Color(0.5f, 0.5f, 0.5f);
     }
 
     public static class VelocityGrapherDimensions
@@ -309,6 +394,7 @@ namespace Debugging.Physics.Utility
         public const float velocityGrapherHeight = 100f;
         public const float velocityGrapherBorderWidth = 0.1f;
         public const float velocityGrapherLineWidth = 0.5f;
+        public const int velocityGrapherMinorSegmentCount = 5;
     }
 
     public static class VelocityGrapherTooltips
@@ -324,6 +410,7 @@ namespace Debugging.Physics.Utility
     public static partial class DebuggingPhysicsLabels
     {
         public const string testArrays = "Test Array Resizing";
+        public const string shaderName = "Hidden/Internal-Colored";
     }
 
     public static partial class DebuggingPhysicsDebug

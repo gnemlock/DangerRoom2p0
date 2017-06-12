@@ -1,4 +1,6 @@
-﻿// Created by Matthew F Keating with the help of Catlike Coding Tutorials.
+﻿// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
+
+// Created by Matthew F Keating with the help of Catlike Coding Tutorials.
 //  --- http://catlikecoding.com/unity/tutorials/rendering/part-1 ---
 
 Shader "Custom/My First Shader"
@@ -41,7 +43,7 @@ Shader "Custom/My First Shader"
                 Interpolators interpolators;
 
                 //interpolators.localPosition = position.xyz;
-                interpolators.position = mul(UNITY_MATRIX_MVP, vertexData.position);
+                interpolators.position = UnityObjectToClipPos(vertexData.position);
                 interpolators.uv = TRANSFORM_TEX(vertexData.uv, _MainTex);
 
                 return interpolators;
