@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
+using DataStructures;
 
 namespace Debugging.Physics
 {
@@ -14,8 +15,9 @@ namespace Debugging.Physics
         public int sampleSize = 100;
         public float maximumVelocity;
         public float minimumVelocity;
-        public float[] velocitySamples;
-        public Rigidbody rigidbody;
+
+        private RingBuffer velocitySamples;
+        private Rigidbody rigidbody;
         //TODO:Currently, this works specifically for Rigidbody. Apply logic to work for both Rigidbody and Rigidbody2D. This can be done in the single script, in theory, as this is an editor script. If not, enforce a reliable pattern to ensure both versions are kept up to date.
 
 
@@ -47,7 +49,7 @@ namespace Debugging.Physics
             // Cache the local Rigidbody.
             rigidbody = GetComponent<Rigidbody>();
 
-            velocitySamples = new float[sampleSize];
+            velocitySamples = new RingBuffer(sampleSize);
 
             // Start the LateFixedUpdate Coroutine to allow calculations at the end of each 
             // FixedUpdate method.

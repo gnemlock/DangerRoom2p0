@@ -88,83 +88,101 @@ namespace DataStructures
             }
         }
 
+        /// <summary>Creates a new instance of <see cref="DataStructures.RingBuffer"/>, with an 
+        /// empty buffer.</summary>
+        /// <param name="size">The element size of the buffer.</param>
         public RingBuffer(int size)
         {
+            // Create a new array of the specified size, and initialise the additional values.
             data = new T[size];
             count = 0;
             readIndex = 0;
             writeIndex = 0;
+            version = 0;
         }
 
-        public T ReadAndRemoveNext()
+        /// <summary>Creates a new instance of <see cref="DataStructures.RingBuffer"/>, with a 
+        /// specified buffer.</summary>
+        /// <param name="data">The data to include, as the buffer.</param>
+        public RingBuffer(T[] data)
         {
-            return ReadAndRemoveNext(default(T));
+            // Set the passed array as the data array, and initialise the additional values.
+            this.data = data;
+            count = data.Length;
+            readIndex = 0;
+            writeIndex = 0;
+            version = 0;
         }
 
-        public T ReadAndRemoveNext(T defaultValue)
-        {
-            T resultingData;
-
-            if(count == 0)
-            {
-                Log.EmptyRingBufferError();
-                resultingData = defaultValue;
-            }
-            else
-            {
-                T temporaryData = data[readIndex];
-                data[readIndex] = default(T);
-                readIndex = (readIndex + 1) % data.Length;
-
-                count--;
-                version++;
-
-                resultingData = temporaryData;
-            }
-
-            return resultingData;
-        }
-
+        /// <summary>Adds a new element to the <see cref="DataStructures.RingBuffer.data"/> 
+        /// array, at the<see cref="DataStructures.RingBuffer.writeIndex"/>.</summary>
+        /// <param name="newData">The new data element to add to the 
+        /// <see cref="DataStructures.RingBuffer.data"/> array.</param>
         public void Add(T newData)
         {
+            // Write the passed data to the current writeIndex, and increment writeIndex. Wrap 
+            // writeIndex, so if it exceeds the limitations of the data array, it resets back to 
+            // the start.
             data[writeIndex] = newData;
             writeIndex = (writeIndex + 1) % data.Length;
 
             if(count == data.Length)
             {
+                // If the count is equal to the array length, the array is already full of 
+                // valid elements; we should rotate the ring buffer. Increment readIndex, and wrap 
+                // the value, so if it exceeds the limitations of the data array, it resets back to 
+                // the start.
                 readIndex =- (readIndex + 1) % data.Length;
             }
             else
             {
+                // Else, the count is not yet equal to the array length, and the array is not yet 
+                // full of valid elements. Increment count, to reflect an additional valid element.
                 count++;
             }
 
+            // Increment the version number, to reflect the change.
             version++;
         }
 
+        /// <summary>Clears the elements in the <see cref="DataStructures.RingBuffer.data"/> array, 
+        /// and resets them to the default value for the type.</summary>
         public void Clear()
         {
             for(int i = 0; i < data.Length; i++)
             {
+                // For each element in the data array, make the element the 
+                // default value for the type.
                 data[i] = default(T);
             }
 
+            // Reset the index and count values, and incremenet the version number 
+            // to reflect the change.
             readIndex = 0;
             writeIndex = 0;
             count = 0;
             version++;
         }
 
+        /// <summary>Checks if the <see cref="DataStructures.RingBuffer.data"/> array contains a 
+        /// specific item.</summary>
+        /// <returns><c>True</c>, if the passed item exists in the 
+        /// <see cref="DataStructures.RingBuffer.data"/> array, else returns <c>False</c>.</returns>
+        /// <param name="item">The item to check for, in the 
+        /// <see cref="DataStructures.RingBuffer.data"/> array.</param>
         public bool Contains(T item)
         {
             for(int i = 0; i < data.Length; i++)
             {
                 if(EqualityComparer<T>.Default.Equals(item, data[i]))
                 {
+                    // For each element in the data array, if the element passes an equality 
+                    // comparison with the item, we have a match; return true.
                     return true;
                 }
             }
 
+            // If we get to this point, no element has matched with the item; return false.
             return false;
         }
 
@@ -231,92 +249,238 @@ namespace DataStructures
             }
         }
 
+        /// <summary>Returns an enumerator for iteration through the 
+        /// <see cref="DataStructures.RingBuffer.data"/> array.</summary>
+        /// <returns>The enumerator.</returns>
+        /// <remarks>At each iteration, the <see cref="DataStructures.RingBuffer.version"/> is 
+        /// checked against an initial value. A change in this value reflects an external change to 
+        /// the <see cref="DataStructures.RingBuffer.data"/> array, and will cancel this method.
+        /// </remarks>
         public IEnumerator<T> GetEnumerator()
         {
+            // Cache a copy of the initial version, to ensure no external changes are made while 
+            // this method iterates across the data.
             int initialVersion = version;
 
             for(int i = 0; i < count; i++)
             {
+                // For each index pointing to a valid element, in the data array, adjust and 
+                // store the value as an index, reading from the readIndex, and wrapping to the 
+                // length of the data array.
                 int index = (readIndex + i) % data.Length;
 
+                // Yield, and return the data pointed to by the current index.
                 yield return data[index];
 
                 if(version != initialVersion)
                 {
-                    
+                    // If the data version has changed since the initialVersion, logged at the 
+                    // start of this method, there has been external change. Break out of this 
+                    // method.
                     break;
                 }
             }
         }
 
+        /// <summary>Returns an enumerator for iteration through the 
+        /// <see cref="DataStructures.RingBuffer.data"/> array.</summary>
+        /// <returns>The enumerator.</returns>
+        /// <remarks>Provides interface functionality, but otherwise, only calls and returns 
+        /// <see cref="DataStructures.RingBuffer.GetEnumerator()"/>. At each iteration, the 
+        /// <see cref="DataStructures.RingBuffer.version"/> is checked against an initial value. A 
+        /// change in this value reflects an external change to the 
+        /// <see cref="DataStructures.RingBuffer.data"/> array, and will cancel this method.
+        /// </remarks>
         IEnumerator IEnumerable.GetEnumerator()
         {
+            // Run and return the value from the local GetEnumerator method.
             return GetEnumerator();
         }
-
+            
+        /// <summary>Finds the first index for a specified item, in the 
+        /// <see cref="DataStructures.RingBuffer.data"/> array.</summary>
+        /// <returns>The first index for the specified item, in the 
+        /// <see cref="DataStructures.RingBuffer.data"/> array. Returns <c>-1</c>, if the item 
+        /// can not be found.</returns>
+        /// <param name="item">The item to check for, in the 
+        /// <see cref="DataStructures.RingBuffer.data"/> array.</param>
         public int IndexOf(T item)
         {
             for(int i = 0; i < count; i++)
             {
+                // For each valid index in the data array, determine the index, adjusted for the 
+                // position of the readIndex and wrapped to the length of the data array.
                 int index = (readIndex + i) % data.Length;
+
                 if(EqualityComparer<T>.Default.Equals(data[i], item))
                 {
+                    // If the current index points to an element identical to that which was passed 
+                    // in, return the index.
                     return i;
                 }
             }
 
+            // If we get to this point, we did not have a match. Return -1.
             return -1;
         }
 
+        /// <summary>Inserts a specific item in to the <see cref="DataStructures.RingBuffer.data"/> 
+        /// array, at a specified index.</summary>
+        /// <param name="index">The index to place the new item. Note that the array will treat 
+        /// <see cref="DataStructures.RingBuffer.readIndex"/> as the current <c>[0]</c> position, 
+        /// and the index will be treated relative to this value.</param>
+        /// <param name="item">The item to insert into the 
+        /// <see cref="DataStructures.RingBuffer.data"/> array.</param>
+        public void Insert(int index, T item)
+        {
+            // Wrap the index around the data array length, to ensure it does not fall outside of 
+            // the array.
+            index %= data.Length;
+
+            if(count != data.Length)
+            {
+                // If the current count of valid elements, in the data array, is not equal to the 
+                // size of the data array; the data array has not been filled, yet.
+
+                for(int i = count - 1; i >= index; i--)
+                {
+                    // For every index, starting at the last valid index, and rolling back to 
+                    // the specified index; move the data value down in the array.
+                    data[i + 1] = data[i];
+                }
+
+                // Now the rest of the array has been shuffled down, place the new item in the 
+                // specified element, and increment count to reflect the additional value.
+                data[index] = item;
+                count++;
+            }
+            else
+            {
+                // If the current count of valid elements, in the data array, is equal to the 
+                // size of the data array; the data array has been filled with valid elements, 
+                // and likely wraps.
+
+                for(int i = readIndex - 1; i != readIndex; i = (i - 1) % data.Length)
+                {
+                    // For every index in the data array, staring at the index before the current 
+                    // readIndex, incrementing backwards and wrapping around the length of the 
+                    // array; move the data value down in the array.
+                    data[(i + 1) % data.Length] = data[i];
+                }
+
+                // Now the rest of the array has been shuffled down, place the new item in the 
+                // specified element, adjusted for the current readIndex and size of the array.
+                data[(readIndex + index) % data.Length] = item;
+            }
+        }
+
+        /// <summary>Reads and removes the next element pointed to by the 
+        /// <see cref="DataStructures.RingBuffer.readIndex"/>.</summary>
+        /// <returns>The removed element, or the default value of T, if there are no active 
+        /// elements in the array.</returns>
+        /// <remarks>This method calls the 
+        /// <see cref="DataStructures.RingBuffer.ReadAndReplaceNext(T)"/> method, passing over the 
+        /// default value for T. This method also moves the readIndex down by one. If there are 
+        /// issues accessing the array, the default value for T will be returned.</remarks>
+        public T ReadAndReplaceNext()
+        {
+            // Read and replace the next element, using the default value for the current type, 
+            // returning the results.
+            return ReadAndReplaceNext(default(T));
+        }
+
+        /// <summary>Reads and removes the next element pointed to by the 
+        /// <see cref="DataStructures.RingBuffer.readIndex"/>.</summary>
+        /// <returns>The removed element, or if there are no active 
+        /// elements in the array, the passed default value.</returns>
+        /// <param name="defaultValue">The value to return, if no elements can be found.</param>
+        /// <remarks>This method moves the readIndex down by one. If there are 
+        /// issues accessing the array, the default value for T will be returned.</remarks>
+        public T ReadAndReplaceNext(T defaultValue)
+        {
+            // Create a temporary store, to cache the retrieved value.
+            T resultingData;
+
+            if(count == 0)
+            {
+                // If the current count is zero, there are no active elements in the array;
+                // log the error, and set the defaultValue as our resultingData.
+                Log.EmptyRingBufferError();
+                resultingData = defaultValue;
+            }
+            else
+            {
+                // Else, we have active elements, store the current data pointed to by the 
+                // readIndex as our resultingData, set that element to the default value for the 
+                // type, and increment the readIndex. Wrap readIndex, so if it exceeds the 
+                // limitations of the data array, it resets back to the start.
+                resultingData = data[readIndex];
+                data[readIndex] = default(T);;
+                readIndex = (readIndex + 1) % data.Length;
+
+                // Decrement the count, and increment the version number, to reflect the 
+                // removal of an element.
+                count--;
+                version++;
+            }
+
+            // Return the derived resultingData.
+            return resultingData;
+        }
+
+        /// <summary>Removes an element from the <see cref="DataStructures.RingBuffer.data"/> 
+        /// array, finding it by comparison with an identical item.</summary>
+        /// <returns><c>True</c>, if an item was found and removed, else returns <c>False</c>.
+        /// </returns>
+        /// <param name="item">The item to match for removal.</param>
+        /// <remarks>This method will determine the position of the item to remove by using the 
+        /// <see cref="DataStructures.RingBuffer.IndexOf(T)"/> method, and as such, will only 
+        /// identify the first instance of the passed in item. Once the index has been determined, 
+        /// this method will use the <see cref="DataStructures.RingBuffer.RemoveAt(int)"/> method 
+        /// to perform the removal.</remarks> 
+        public bool Remove(T item)
+        {
+            // Find the first index at which the passed in item is found, in the data array.
+            int index = IndexOf(item);
+
+            if(index == -1)
+            {
+                // If the derived index is -1, the item does not exist in the data array;
+                // return false to flag the method as unsuccessful.
+                return false;
+            }
+
+            // If we get to this point, we have found a valid item; remove an item from the data 
+            // array, by the derived index, and return true to flag the method as successful.
+            RemoveAt(index);
+            return true;
+        }
+            
+        /// <summary>Removes an element from the <see cref="DataStructures.RingBuffer.data"/> 
+        /// array, at the specified position.</summary>
+        /// <param name="index">The index for the element to be removed.</param>
         public void RemoveAt(int index)
         {
+            // Wrap the index around the count value, to ensure it points to a valid element.
             index %= count;
 
+            // Determine the first index to replace, by adjusting the determined index by the 
+            // readIndex, and wrapping it around the data array length.
             int toIndex = (readIndex + index) % data.Length;
 
             for(int i = index; i < count; i++)
             {
+                // For each valid element in the data array, determine the element to move by 
+                // incrementing the toIndex, and wrapping to the data array length. Store the value 
+                // of the "fromIndex" element in the "toIndex" element, and set the fromIndex as 
+                // the new toIndex, as we shuffle through the array.
                 int fromIndex = (toIndex + 1) % data.Length;
                 data[toIndex] = data[fromIndex];
                 toIndex = fromIndex;
             }
 
+            // Set the final "toIndex" element as the default value of the type.
             data[toIndex] = default(T);
-        }
-
-        public bool Remove(T item)
-        {
-            int index = IndexOf(item);
-
-            if(index == -1)
-            {
-                return false;
-            }
-
-            RemoveAt(index);
-            return true;
-        }
-
-        public void Insert(int index, T item)
-        {
-            if(count != data.Length)
-            {
-                for(int i = count - 1; i > readIndex; i--)
-                {
-                    data[i + 1] = data[i];
-                }
-
-                count++;
-            }
-            else
-            {
-                for(int i = readIndex - 1; i != readIndex; i = (i - 1) % data.Length)
-                {
-                    data[(i + 1) % data.Length] = data[i];
-                }
-
-                data[(readIndex + index) % data.Length] = item;
-            }
         }
     }
 }
