@@ -16,7 +16,7 @@ namespace Debugging.Physics
         public float maximumVelocity;
         public float minimumVelocity;
 
-        private RingBuffer velocitySamples;
+        public RingBuffer<float> velocitySamples;
         private Rigidbody rigidbody;
         //TODO:Currently, this works specifically for Rigidbody. Apply logic to work for both Rigidbody and Rigidbody2D. This can be done in the single script, in theory, as this is an editor script. If not, enforce a reliable pattern to ensure both versions are kept up to date.
 
@@ -49,7 +49,7 @@ namespace Debugging.Physics
             // Cache the local Rigidbody.
             rigidbody = GetComponent<Rigidbody>();
 
-            velocitySamples = new RingBuffer(sampleSize);
+            velocitySamples = new RingBuffer<float>(sampleSize);
 
             // Start the LateFixedUpdate Coroutine to allow calculations at the end of each 
             // FixedUpdate method.
@@ -85,10 +85,11 @@ namespace Debugging.Physics
         {
             if(newSampleSize != sampleSize)
             {
+                //TODO: We are using a Ring Buffer, now. This needs to be redone to suit the new data structure.
                 // If we are not attempting to resize the velocitySamples array to the same size, 
                 // resize the velocitySamples array to the new size, using gravity to retain data.
-                DataStructures.ArrayManipulation
-                    .ResizeArrayWithGravity<float>(ref velocitySamples, newSampleSize);
+                //DataStructures.ArrayManipulation
+                //    .ResizeArrayWithGravity<float>(ref velocitySamples, newSampleSize);
 
                 // Update the sampleSize value to reflect the new velocitySamples size.
                 sampleSize = newSampleSize;

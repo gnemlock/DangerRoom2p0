@@ -47,6 +47,8 @@ namespace DataStructures
         /// <remarks>Required as part of the included interface.</remarks>
         public bool IsReadOnly { get { return false; } }
 
+        public int Length{ get { return data.Length; } }
+
         /// <summary>Gets or sets the <see cref="DataStructures.RingBuffer.data"/> element at the 
         /// specified index.</summary>
         /// <param name="index">The index of the <see cref="DataStructures.RingBuffer.data"/> 
