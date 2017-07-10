@@ -83,7 +83,8 @@ namespace DataStructures
                 }
                 else
                 {
-                    // Els
+                    // Else, locate the dynamic index based off the current readIndex, wrapping to the length of 
+                    // the array, and set the value.
                     index = (readIndex + index) % data.Length;
                     data[index] = value;
                 }
