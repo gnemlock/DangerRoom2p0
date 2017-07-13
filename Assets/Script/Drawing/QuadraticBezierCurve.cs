@@ -42,7 +42,7 @@ namespace Drawing
         
         /// <summary>Finds the normalised velocity of this curve, at a specified point.</summary>
         /// <remarks>This is the same as calling 
-        /// <see cref="GetVelocityOfPointOnCurve().normalized"/>
+        /// <see cref="Drawing.QuadraticBeizerCurve.GetVelocityOfPointOnCurve().normalized"/>
         /// <returns>The velocity at the specified point, normalised.</returns>
         /// <param name="t">The specific point, defined as a normalised interpolant.
         /// This value will be clamped to 0 and 1.</param>
@@ -52,12 +52,13 @@ namespace Drawing
             return GetVelocityOfPointOnCurve(0f).normalized;
         }
         
-        /// <summary>Gets one of the three points in this <see cref="QuadraticBezierCurve"/>,
-        /// using an index.</summary>
+        /// <summary>Gets one of the three points in this 
+        /// <see cref="Drawing.QuadraticBezierCurve"/>, using an index.</summary>
         /// <returns>The first, second or third point.</returns>
         /// <param name="pointIndex">The index representation of the desired point. <c>0</c> will 
-        /// return <see cref="pointOne"/>, <c>1</c> will return <see cref="pointTwo"/> and all 
-        /// other values will return <see cref="pointThree"/>.</param>
+        /// return <see cref="Drawing.QuadraticBeizerCurve.pointOne"/>, <c>1</c> will return 
+        /// <see cref="Drawing.QuadraticBeizerCurve.pointTwo"/> and al other values will return 
+        /// <see cref="Drawing.QuadraticBeizerCurve.pointThree"/>.</param>
         public virtual Vector3 GetPoint(int pointIndex)
         {
             // Based off the provided index, return the corresponding point.
@@ -73,7 +74,7 @@ namespace Drawing
         }
         
         //// <summary>Finds the coordinates of a specified point on this 
-        /// <see cref="QuadraticBezierCurve"/>.</summary>
+        /// <see cref="Drawing.QuadraticBezierCurve"/>.</summary>
         /// <returns>The coordinates of the point.</returns>
         /// <param name="t">The specific point, defined as a normalised interpolant.
         /// This value will be clamped to 0 and 1.</param>
@@ -84,7 +85,7 @@ namespace Drawing
                 BezierUtility.GetPoint(pointOne, pointTwo, pointThree, t));
         }
         
-        /// <summary>Finds the velocity of this <see cref="BezierCurve"/>, at a specified point.
+        /// <summary>Finds the velocity of this <see cref="Drawing.BezierCurve"/>, at a specified point.
         /// </summary>
         /// <returns>The velocity at the specified point.</returns>
         /// <param name="t">The specific point, defined as a normalised interpolant.
@@ -98,10 +99,11 @@ namespace Drawing
                 - transform.position;
         }
         
-        /// <summary>Sets the specified point in this <see cref="QuadraticBezierCurve"/>.</summary>
-        /// <param name="pointIndex">The index of the point being set. <see cref="pointOne"/> will 
-        /// be set with a value of <c>0</c>, <see cref="pointTwo"/> will be set with a value of 
-        /// <c>1</c> and <see cref="pointThree"/> will be set with a value of <c>2</c>.</param>
+        /// <summary>Sets the specified point in this <see cref="Drawing.QuadraticBezierCurve"/>.</summary>
+        /// <param name="Drawing.QuadraticBeizerCurve.pointIndex">The index of the point being set. 
+        /// <see cref="Drawing.QuadraticBeizerCurve.pointOne"/> will be set with a value of <c>0</c>, 
+        /// <see cref="Drawing.QuadraticBeizerCurve.pointTwo"/> will be set with a value of <c>1</c> and 
+        /// <see cref="Drawing.QuadraticBeizerCurve.pointThree"/> will be set with a value of <c>2</c>.</param>
         /// <param name="newPoint">The new value for the desired point.</param>
         public virtual void SetPoint(int pointIndex, Vector3 newPoint)
         {
@@ -173,14 +175,14 @@ namespace Drawing.Utility
     [CustomEditor(typeof(QuadraticBezierCurve))] public class QuadraticBezierCurveEditor : Editor
     {
         #if UNITY_EDITOR
-        /// <summary>Cached reference to the target <see cref="QuadraticBezierCurve"/>.</summary>
+        /// <summary>Cached reference to the target <see cref="Drawing.QuadraticBezierCurve"/>.</summary>
         private QuadraticBezierCurve quadraticBezierCurve;
         /// <summary>Cached reference to the target <see cref="Transform"/>.</summary>
         private Transform transform;
         /// <summary>Cached reference to the intended handle rotation.</summary>
         private Quaternion handleRotation;
         
-        /// <summary>This method will be called to draw the <see cref="QuadraticBezierCurve"/>
+        /// <summary>This method will be called to draw the <see cref="Drawing.QuadraticBezierCurve"/>
         /// in to the scene view.</summary>
         private void OnSceneGUI()
         {
@@ -248,7 +250,7 @@ namespace Drawing.Utility
         
         /// <summary>Draws a handle at the specified point, and manages user translation.</summary>
         /// <returns>The position of the handle, updated to reflect user translation.</returns>
-        /// <param name="pointIndex">The index of the point in <see cref="BezierCurve.pointsdd"/> 
+        /// <param name="pointIndex">The index of the point in <see cref="Drawing.BezierCurve.points"/> 
         /// to which we are to draw a handle for.</param>
         private Vector3 ShowHandle (int pointIndex)
         {
