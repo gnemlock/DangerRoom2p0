@@ -19,7 +19,6 @@ namespace Electrical
     using Dimensions = Utility.ElectricalWireDimensions;
     #endif
         
-    // TODO: Add basic drawing functionality
     // TODO: Create and test functionality for 'electrical spark' travelling down wire.
 
     /// <summary>Represents an electrical wire, designed to link two 
@@ -47,15 +46,22 @@ namespace Electrical
         /// <summary>Returns the count of individual positions.</summary>
         public int positionCount { get { return positions.Length; } }
 
+        /// <summary>Gets the specified position co-ordinates for this 
+        /// <see cref="Electrical.ElectricalWire">.</summary>
+        /// <params name="positionID">The ID number of the position to be retrieved.</params>
+        /// <returns>The position co-ordinates specified by the ID number</returns>
         public Vector3 GetPosition(int positionID)
         {
             try
             {
+                // Try to return the positions element pointed to by the positionID;
                 return positions[positionID];
             }
             catch(System.IndexOutOfRangeException exception)
             {
-                //TODO: Throw Error
+                // if this causes an IndexOutOfRangeException, log an error, and return the
+                // default position.
+                Log.AttemptingToGetInvalidPosition(positionID);
                 return Vector3.zero;
             }
         }
@@ -141,15 +147,22 @@ namespace Electrical
             return totalDistance;
         }
 
+        /// <summary>Sets the position of a specified positions coordinate in this 
+        /// <see cref="Electrical.ElectricalWire">.</summary>
+        /// <params name="positionID">The ID number of the position to be set.</params>
+        /// <params name="position">The new position value</params>
         public void SetPosition(int positionID, Vector3 position)
         {
             try
             {
+                // Try to set the new position of the positions element referenced 
+                // by the positionID;
                 positions[positionID] = position;
             }
             catch(System.IndexOutOfRangeException exception)
             {
-                //TODO: Throw Error
+                // if this causes an IndexOutOfRangeException, log the error.
+                Log.AttemptingToSetInvalidPosition(positionID);
             }
         }
 
@@ -177,10 +190,14 @@ namespace Electrical
 namespace Electrical.Utility
 {
     #if UNITY_EDITOR
+    /// <summary>This class provides additional functionality to the editor.</summary>
     [CustomEditor(typeof(ElectricalWire))] public class ElectricalWireEditor : Editor
     {
+        /// <summary>Cached reference to the target <see cref="Electrical.ElectricalWire"/>.</summary>
         private ElectricalWire electricalWire;
+        /// <summary>Cached reference to the target <see cref="Transform"/>.</summary>
         private Transform transform;
+        /// <summary>Cached reference to the intended handle rotation.</summary>
         private Quaternion handleRotation;
                 
         public override void OnInspectorGUI()
@@ -190,37 +207,61 @@ namespace Electrical.Utility
             electricalWire = target as ElectricalWire;
         }
 
+        /// <summary>This method will be called to draw the <see cref="Electrical.ElectricalWire"/>
+        /// in to the scene view.</summary>
         private void OnSceneGUI()
         {
+            // Explicitly reference the target class as an ElectricalWire, so we have ElectricalWire 
+            // specific access, and reference the target transform.
             electricalWire = target as ElectricalWire;
             transform = electricalWire.transform;
 
+            // Cache a reference to the current handle rotation. If we are using local rotation, 
+            // this will be the transform rotation. If we are using world rotation, this will 
+            // be the default identity value.
             handleRotation = (Tools.pivotRotation == PivotRotation.Local) ? 
                 transform.rotation : Quaternion.identity;
 
+            // Create a vector array to represent the position of each handle.
             Vector3[] handlePositions = new Vector3[electricalWire.positionCount];
 
             for(int i = 0; i < electricalWire.positionCount; i++)
             {
+                // for each handle position, process the handle, and update the handlePosition.
                 handlePositions[i] = ShowHandle(i);
             }
 
+            // Set the Handles.color to the wireColour, in preparation for drawing the wire.
             Handles.color = ElectricalWireColours.wireColour;
 
             for(int i = 0; i < electricalWire.positionCount - 1; i++)
             {
+                // For each wire position, draw a line between the two positions.
                 Handles.DrawLine(handlePositions[i], handlePositions[i + 1]);
             }
         }
 
+        /// <summary>Draws a handle at the specified point, and manages user translation.</summary>
+        /// <returns>The position of the handle, updated to reflect user translation.</returns>
+        /// <param name="pointIndex">The index of the position in <see cref="Electrical.ElectricalWire"/> 
+        /// to which we are to draw a handle for.</param>
         private Vector3 ShowHandle(int positionIndex)
         {
+            // Create a local position to contain the position pointed to by the requested index, 
+            // converted to world coordinates.
             Vector3 position = transform.TransformPoint(electricalWire.GetPosition(positionIndex));
 
+            // Perform a BeginChangeCheck so we can tell if the position of the handle changes, 
+            // through user translation.
             EditorGUI.BeginChangeCheck();
-
+    
+            // Create a handle at the determined point, using the current rotation, and update 
+            // point to reflect any new changes caused by user translation.
             position = Handles.DoPositionHandle(position, handleRotation);
 
+            // If the editor detected change, i.e. the user translated the handle via scene view, 
+            // Record a change to the inspector and update the original position reference in 
+            // the actual curve to reflect the new position in local coordinates.
             if(EditorGUI.EndChangeCheck())
             {
                 this.PrepareChange(electricalWire, 
@@ -229,6 +270,7 @@ namespace Electrical.Utility
                     .SetPosition(positionIndex, transform.InverseTransformPoint(position));
             }
 
+            // Return the final position.
             return position;
         }
     }
@@ -243,6 +285,7 @@ namespace Electrical.Utility
     // Colours for use in displaying custom editor GUI.
     public static class ElectricalWireColours
     {
+        /// <summary>The colour to use when drawing wires into the Unity Editor.</summary>
         public static Color wireColour = Color.red;
     }
 
@@ -267,6 +310,20 @@ namespace Electrical.Utility
     // Provides debug functionality, including methods and customised string messages.
     public static partial class ElectricalDebug
     {
+        private const string attemptingToGetInvalidPosition = "Attempting to get an invalid " 
+            + "position index of {0}.";
+        private const string attemptingToSetInvalidPosition = "Attempting to set an invalid " 
+            + "position index of {0}.";
+        
+        public static void AttemptingToGetInvalidPosition(int positionID)
+        {
+            Debug.LogError(String.Format(attemptingToGetInvalidPosition, positionID);
+        }
+        
+        public static void AttemptingToSetInvalidPosition(int positionID)
+        {
+            Debug.LogError(String.Format(attemptingToSetInvalidPosition, positionID);
+        }
     }
     
     // Strings used for tag or name comparison
