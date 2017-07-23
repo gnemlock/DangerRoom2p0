@@ -20,6 +20,7 @@ namespace Electrical
     #endif
         
     // TODO: Create and test functionality for 'electrical spark' travelling down wire.
+    // TODO: Create functionality to determine exact position given normalised value (0 - 1)
 
     /// <summary>Represents an electrical wire, designed to link two 
     /// <see cref="Electrical.ElectricalComponent"> types, to transfer power.</summary>
@@ -169,7 +170,7 @@ namespace Electrical
         /// <summary>Returns the total length of this 
         /// <see cref="Electrical.ElectricalWire">.</summary>
         /// <returns>The total length of this <see cref="Electrical.ElectricalWire">.</returns>
-        public float TotalLength()
+        public override float TotalLength()
         {
             // Store a float to start summing up the distance between segments
             float totalDistance = 0f;
@@ -317,12 +318,12 @@ namespace Electrical.Utility
         
         public static void AttemptingToGetInvalidPosition(int positionID)
         {
-            Debug.LogError(String.Format(attemptingToGetInvalidPosition, positionID);
+            Debug.LogError(string.Format(attemptingToGetInvalidPosition, positionID));
         }
         
         public static void AttemptingToSetInvalidPosition(int positionID)
         {
-            Debug.LogError(String.Format(attemptingToSetInvalidPosition, positionID);
+            Debug.LogError(string.Format(attemptingToSetInvalidPosition, positionID));
         }
     }
     
