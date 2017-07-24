@@ -21,6 +21,7 @@ namespace Electrical
         
     // TODO: Create and test functionality for 'electrical spark' travelling down wire.
     // TODO: Create functionality to determine exact position given normalised value (0 - 1)
+	// TODO: Create reverse lerping
 
     /// <summary>Represents an electrical wire, designed to link two 
     /// <see cref="Electrical.ElectricalComponent"> types, to transfer power.</summary>
@@ -30,9 +31,11 @@ namespace Electrical
     {
         /// <summary>The physical co-ordinates of which the wire runs along, 
         /// from start to finish.</summary>
-        //TODO: Set up ElectricalWire to use these co-ordinates to draw movable handles, in the inspector, as well as adding or removing points.
+        //TODO: adding or removing points.
         //TODO: Restrict size to atleast 2
         [SerializeField][Tooltip(Tooltips.positions)] private Vector3[] positions;
+        //TODO: float[] distances Comment
+        private float[] distances;
 
         /// <summary>Returns the starting position of the wire.</summary>
         /// <remarks>This is the same as calling <c>positions[0]</c>.</remarks>
@@ -47,100 +50,198 @@ namespace Electrical
         /// <summary>Returns the count of individual positions.</summary>
         public int positionCount { get { return positions.Length; } }
 
+        //TODO: Start() Comment
+        private void Start()
+        {
+            // Initialise the distance array by calculating the distances along each wire segment.
+            CalculateDistances();
+        }
+
+        //TODO: CalculateDistances() Comments
+        private void CalculateDistances()
+        {
+            distances = new float[positions.Length];
+
+            for(int i = 0; i < (distances.Length - 1); i++)
+            {
+                distances[i] = Vector3.Distance(positions[i], positions[i + 1]);
+            }
+
+            distances[distances.Length - 1] = TotalLength();
+        }
+
+        /// <summary>
+        /// Calculates the distances.
+        /// </summary>
+        /// <param name="positionIndex">The index of the position that has been changed.</param>
+        //TODO:CalculateDistances(int) Comments
+        private void CalculateDistances(int positionIndex)
+        {
+            float distanceDifference;
+
+            if(positionIndex <= 1)
+            {
+                distanceDifference = distances[0];
+                distances[0] = Vector3.Distance(positions[0], positions[1]);
+                distanceDifference -= distances[0];
+            }
+            else if(positionIndex >= segmentCount)
+            {
+                distanceDifference = distances[segmentCount];
+                distances[segmentCount - 1] 
+                    = Vector3.Distance(distances[segmentCount], distances[segmentCount - 1]);
+                distanceDifference -= distances[segmentCount - 1];
+            }
+            else
+            {
+                distanceDifference = distances[positionIndex] + distances[positionIndex - 1];
+                distances[positionIndex - 1] 
+                    = Vector3.Distance(positions[positionIndex - 1], positions[positionIndex]);
+                distances[positionIndex] 
+                    = Vector3.Distance(positions[positionIndex], positions[positionIndex + 1]);
+                distanceDifference -= (distances[positionIndex] + distances[positionIndex - 1]);
+            }
+
+            distances[segmentCount] -= distanceDifference;
+        }
+
+        //TODO: GetNormalisedPosition(float) Comments
+        //TODO: Test and clean GetNormalisedPosition(float)
+        public Vector3 GetNormalisedPosition(float positionIncrement)
+        {
+            if(positionIncrement <= 0f)
+            {
+                return start;
+            }
+            else if(positionIncrement >= 1.0f)
+            {
+                return end;
+            }
+            else
+            {
+                float currentDistance = 0f;
+                float maxDistance = distances[segmentCount];
+                float currentPositionIncrement = 0f;
+                float lastPositionIncrement = 0f;
+                float incrementDifference = 0f;
+                float segmentIncrement = 0f;
+
+                for(int i = 0; i < segmentCount; i++)
+                {
+                    currentDistance += distances[i];
+                    currentPositionIncrement = currentDistance / maxDistance;
+
+                    if(currentPositionIncrement >= positionIncrement)
+                    {
+                        incrementDifference = currentPositionIncrement - lastPositionIncrement;
+                        segmentIncrement = segmentIncrement - lastPositionIncrement;
+
+                        return Vector3.Lerp(positions[i], positions[i + 1], segmentIncrement);
+                    }
+                    else
+                    {
+                        lastPositionIncrement = currentPositionIncrement;
+                    }
+                }
+                //TODO: If we get to here, something went wrong; handle error
+                return Vector3.zero;
+            }
+        }
+
         /// <summary>Gets the specified position co-ordinates for this 
         /// <see cref="Electrical.ElectricalWire">.</summary>
-        /// <params name="positionID">The ID number of the position to be retrieved.</params>
-        /// <returns>The position co-ordinates specified by the ID number</returns>
-        public Vector3 GetPosition(int positionID)
+        /// <params name="positionIndex">The index of the position to be retrieved.</params>
+        /// <returns>The position co-ordinates specified by the index.</returns>
+        public Vector3 GetPosition(int positionIndex)
         {
             try
             {
                 // Try to return the positions element pointed to by the positionID;
-                return positions[positionID];
+                return positions[positionIndex];
             }
             catch(System.IndexOutOfRangeException exception)
             {
                 // if this causes an IndexOutOfRangeException, log an error, and return the
                 // default position.
-                Log.AttemptingToGetInvalidPosition(positionID);
+                Log.AttemptingToGetInvalidPosition(positionIndex);
                 return Vector3.zero;
             }
         }
 
         /// <summary>Returns the length of an individual segment, in this 
         /// <see cref="Electrical.ElectricalWire">.</summary>
-        /// <params name="segmentID">The segment intended to be measured, identified by number.
-        /// Consider the first segment to be <c>segmentID = 1</c>.</params>
+        /// <params name="segmentIndex">The segment intended to be measured, identified by index. 
+        /// Consider the first segment to be <c>segmentIndex = 1</c>.</params>
         /// <returns>The length of the identified segment, or <c>0f</c>, should the 
-        /// <c>segmentID</c> point to an invalid segment.</returns>
-        public float SegmentLength(int segmentID)
+        /// <c>segmentIndex</c> point to an invalid segment.</returns>
+        public float SegmentLength(int segmentIndex)
         {
-            if(segmentID < 1 || segmentID > segmentCount)
+            if(segmentIndex < 1 || segmentIndex > segmentCount)
             {
-                // If the segmentID is less than 1 or greater than the segmentCount, it points to
-                // an invalid segment; return 0f.
+                // If the segmentIndex is less than 1 or greater than the segmentCount, it points 
+                // to an invalid segment; return 0f.
                 return 0f;
             }
 
             // Return the Vector3.Distance between the two co-ordinates identified by the 
-            // segmentID, where the segmentID points to the ending position of the segment.
-            return Vector3.Distance(positions[segmentID - 1], positions[segmentID]);
+            // segmentIndex, where the segmentIndex points to the ending position of the segment.
+            return Vector3.Distance(positions[segmentIndex - 1], positions[segmentIndex]);
         }
 
         /// <summary>Returns the total length of a set of specified segments, in this 
         /// <see cref="Electrical.ElectricalWire">.</summary>
-        /// <params name="startSegmentID">The segment to start measuring from, identified by 
-        /// number. Consider the first segment to be <c>startSegmentID = 1</c>, where any lower 
+        /// <params name="startSegmentIndex">The segment to start measuring from, identified by 
+        /// number. Consider the first segment to be <c>startSegmentIndex = 1</c>, where any lower 
         /// value will be reset to <c>1</c>.</params>
-        /// <params name="endSegmentID">The segment to finish measuring at, identified by number.
-        /// The last segment will be included in the measurement, and any ID outside of the bounds 
-        /// will be reset to the final segment.</params>
+        /// <params name="endSegmentIndex">The segment to finish measuring at, identified by index. 
+        /// The last segment will be included in the measurement, and any index outside of the 
+        /// bounds will be reset to the final segment.</params>
         /// <returns>The length of the inclusive segments between the provide values.</returns>
-        /// <remarks>Should both ID values be equal, the measurement will simply defer to 
-        /// <see cref="Electrical.ElectricalWire.SegmentLength(int)">. The start ID should always 
-        /// be lower than the end ID; however, if the start ID is actually higher, the distance 
-        /// will still be calculated. The values will still have to be swapped, in order to 
-        /// facilitate the for loop, so ensuring correct order will still be slightly quicker.
+        /// <remarks>Should both indices be equal, the measurement will simply defer to 
+        /// <see cref="Electrical.ElectricalWire.SegmentLength(int)">. The start index should 
+        /// always be lower than the end index; however, if the start index is actually higher, the 
+        /// distance will still be calculated. The values will still have to be swapped, in order 
+        /// to facilitate the for loop, so ensuring correct order will still be slightly quicker.
         /// </remarks>
-        public float SegmentLength(int startSegmentID, int endSegmentID)
+        public float SegmentLength(int startSegmentIndex, int endSegmentIndex)
         {
-            if(startSegmentID > endSegmentID)
+            if(startSegmentIndex > endSegmentIndex)
             {
-                // If the startSegmentID is greater than the endSegmentID, the segmentID values 
-                // are in the wrond order; use a placeholder to swap the values around.
-                int newStartSegmentID = endSegmentID;
-                endSegmentID = startSegmentID;
-                startSegmentID = newStartSegmentID;
+                // If the startSegmentIndex is greater than the endSegmentIndex, the segmentIndices 
+                // are in the wrong order; use a placeholder to swap the values around.
+                int newStartSegmentID = endSegmentIndex;
+                endSegmentIndex = startSegmentIndex;
+                startSegmentIndex = newStartSegmentID;
             }
             
-            if(startSegmentID < 1)
+            if(startSegmentIndex < 1)
             {
-                // If the startSegmentID is less than 1, it points to an invalid segment; 
+                // If the startSegmentIndex is less than 1, it points to an invalid segment; 
                 // reset it back to the first segment.
-                startSegmentID = 1;
+                startSegmentIndex = 1;
             }
 
-            if(endSegmentID > segmentCount)
+            if(endSegmentIndex > segmentCount)
             {
-                // If the endSegmentID is greater than the segmentCount, it points to an invalid 
+                // If the endSegmentIndex is greater than the segmentCount, it points to an invalid 
                 // segment; reset it back to the last segment.
-                endSegmentID = segmentCount;
+                endSegmentIndex = segmentCount;
             }
 
-            if(startSegmentID == endSegmentID)
+            if(startSegmentIndex == endSegmentIndex)
             {
-                // If the two segmentIDs are the same, return the distance of the single segment.
-                return SegmentLength(startSegmentID);
+                // If the two indices are the same, return the distance of the single segment.
+                return SegmentLength(startSegmentIndex);
             }
 
             // Store a float to start summing up the distance between segments
             float totalDistance = 0f;
 
-            for(int i = startSegmentID; i <= endSegmentID; i++)
+            for(int i = startSegmentIndex; i <= endSegmentIndex; i++)
             {
                 // For each segment, between and inclusive of the segments pointed to by the 
-                // startSegmentID and endSegmentID, add the Vector3.Distance of the segment to the 
-                // totalDistance.
+                // startSegmentIndex and endSegmentIndex, add the Vector3.Distance of the segment 
+                // to the totalDistance.
                 totalDistance += Vector3.Distance(positions[i - 1], positions[i]);
             }
 
@@ -150,20 +251,24 @@ namespace Electrical
 
         /// <summary>Sets the position of a specified positions coordinate in this 
         /// <see cref="Electrical.ElectricalWire">.</summary>
-        /// <params name="positionID">The ID number of the position to be set.</params>
+        /// <params name="positionIndex">The index of the position to be set.</params>
         /// <params name="position">The new position value</params>
-        public void SetPosition(int positionID, Vector3 position)
+        public void SetPosition(int positionIndex, Vector3 position)
         {
             try
             {
                 // Try to set the new position of the positions element referenced 
-                // by the positionID;
-                positions[positionID] = position;
+                // by the positionIndex;
+                positions[positionIndex] = position;
+
+                // If setting the position was successful, update the distances array, by 
+                // calculating the distances of the wires attached to the positionIndex.
+                CalculateDistances(positionIndex);
             }
             catch(System.IndexOutOfRangeException exception)
             {
                 // if this causes an IndexOutOfRangeException, log the error.
-                Log.AttemptingToSetInvalidPosition(positionID);
+                Log.AttemptingToSetInvalidPosition(positionIndex);
             }
         }
 
