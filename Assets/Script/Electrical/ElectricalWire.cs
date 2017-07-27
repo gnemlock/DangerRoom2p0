@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEditor;
 #endif
 
+//TODO: Fix issue with positions returning null array, even when visually created in inspector
 namespace Electrical
 {
     using StringFormats = Utility.ElectricalStringFormats;
@@ -37,12 +38,39 @@ namespace Electrical
         //TODO: float[] distances Comment
         private float[] distances;
 
+        //TODO:Rewrite comments for start and end to include error catches and default output
         /// <summary>Returns the starting position of the wire.</summary>
         /// <remarks>This is the same as calling <c>positions[0]</c>.</remarks>
-        public Vector3 start { get { return positions[0]; } }
+        public Vector3 start
+        {
+            get 
+            {
+                try
+                {
+                    return positions[0];
+                }
+                catch(System.IndexOutOfRangeException)  
+                {
+                    return Vector3.zero;
+                }
+            }
+        }
         /// <summary>Returns the ending position of the wire.</summary>
         /// <remarks>This is the same as calling <c>positions[positions.Length - 1]</c>.</remarks>
-        public Vector3 end { get { return positions[segmentCount]; } }
+        public Vector3 end
+        {
+            get
+            {
+                try
+                {
+                    return positions[segmentCount];
+                }
+                catch(System.IndexOutOfRangeException)
+                {
+                    return Vector3.zero;
+                }
+            }
+        }
         /// <summary>Returns the count of individual segments, seperated by differant co-ordinates, 
         /// in the wire.</summary>
         /// <remarks>This is the same as calling <c>positions.Length - 1</c>.</remarks>
@@ -89,7 +117,7 @@ namespace Electrical
             {
                 distanceDifference = distances[segmentCount];
                 distances[segmentCount - 1] 
-                    = Vector3.Distance(distances[segmentCount], distances[segmentCount - 1]);
+                    = Vector3.Distance(positions[segmentCount], positions[segmentCount - 1]);
                 distanceDifference -= distances[segmentCount - 1];
             }
             else
