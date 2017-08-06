@@ -38,37 +38,14 @@ namespace Electrical
         //TODO: float[] distances Comment
         private float[] distances;
 
-        //TODO:Rewrite comments for start and end to include error catches and default output
-        /// <summary>Returns the starting position of the wire.</summary>
-        /// <remarks>This is the same as calling <c>positions[0]</c>.</remarks>
-        public Vector3 start
-        {
-            get 
-            {
-                try
-                {
-                    return positions[0];
-                }
-                catch(System.IndexOutOfRangeException)  
-                {
-                    return Vector3.zero;
-                }
-            }
-        }
-        /// <summary>Returns the ending position of the wire.</summary>
-        /// <remarks>This is the same as calling <c>positions[positions.Length - 1]</c>.</remarks>
-        public Vector3 end
+        /// <summary>Returns the starting position of the wire, in world coordinates.</summary>
+        public Vector3 startPosition { get { return transform.TransformPoint(positions[0]); } }
+        /// <summary>Returns the ending position of the wire in world coordinates.</summary>
+        public Vector3 endPosition
         {
             get
             {
-                try
-                {
-                    return positions[segmentCount];
-                }
-                catch(System.IndexOutOfRangeException)
-                {
-                    return Vector3.zero;
-                }
+                return transform.TransformPoint(positions[segmentCount]);
             }
         }
         /// <summary>Returns the count of individual segments, seperated by differant co-ordinates, 
@@ -79,7 +56,7 @@ namespace Electrical
         public int positionCount { get { return positions.Length; } }
 
         //TODO: Start() Comment
-        private void Start()
+        protected override void Start()
         {
             // Initialise the distance array by calculating the distances along each wire segment.
             CalculateDistances();
@@ -89,13 +66,13 @@ namespace Electrical
         private void CalculateDistances()
         {
             distances = new float[positions.Length];
+            distances[(distances.Length - 1)] = 0f;
 
             for(int i = 0; i < (distances.Length - 1); i++)
             {
                 distances[i] = Vector3.Distance(positions[i], positions[i + 1]);
+                distances[distances.Length - 1] += distances[i];
             }
-
-            distances[distances.Length - 1] = TotalLength();
         }
 
         /// <summary>
@@ -139,14 +116,15 @@ namespace Electrical
         {
             if(positionIncrement <= 0f)
             {
-                return start;
+                return startPosition;
             }
             else if(positionIncrement >= 1.0f)
             {
-                return end;
+                return endPosition;
             }
             else
             {
+                //TODO:This is currently outputting the correct key positions at the right increment of time; but not positions between the key positions
                 float currentDistance = 0f;
                 float maxDistance = distances[segmentCount];
                 float currentPositionIncrement = 0f;
@@ -164,7 +142,8 @@ namespace Electrical
                         incrementDifference = currentPositionIncrement - lastPositionIncrement;
                         segmentIncrement = segmentIncrement - lastPositionIncrement;
 
-                        return Vector3.Lerp(positions[i], positions[i + 1], segmentIncrement);
+                        return transform.TransformPoint(Vector3
+                            .Lerp(positions[i], positions[i + 1], segmentIncrement));
                     }
                     else
                     {
@@ -176,11 +155,11 @@ namespace Electrical
             }
         }
 
-        /// <summary>Gets the specified position co-ordinates for this 
-        /// <see cref="Electrical.ElectricalWire">.</summary>
+        /// <summary>Gets the specified position coordinates for this 
+        /// <see cref="Electrical.ElectricalWire">, in local coordinates.</summary>
         /// <params name="positionIndex">The index of the position to be retrieved.</params>
-        /// <returns>The position co-ordinates specified by the index.</returns>
-        public Vector3 GetPosition(int positionIndex)
+        /// <returns>The position coordinates specified by the index.</returns>
+        public Vector3 GetLocalPosition(int positionIndex)
         {
             try
             {
@@ -194,6 +173,12 @@ namespace Electrical
                 Log.AttemptingToGetInvalidPosition(positionIndex);
                 return Vector3.zero;
             }
+        }
+
+        //TODO: GetWorldPosition(int) comments
+        public Vector3 GetWorldPosition(int positionIndex)
+        {
+            return transform.TransformPoint(GetLocalPosition(positionIndex));
         }
 
         /// <summary>Returns the length of an individual segment, in this 
@@ -383,7 +368,8 @@ namespace Electrical.Utility
         {
             // Create a local position to contain the position pointed to by the requested index, 
             // converted to world coordinates.
-            Vector3 position = transform.TransformPoint(electricalWire.GetPosition(positionIndex));
+            Vector3 position 
+                = transform.TransformPoint(electricalWire.GetLocalPosition(positionIndex));
 
             // Perform a BeginChangeCheck so we can tell if the position of the handle changes, 
             // through user translation.
