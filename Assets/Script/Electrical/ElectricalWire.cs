@@ -114,9 +114,11 @@ namespace Electrical
         //TODO: Test and clean GetNormalisedPosition(float)
         public Vector3 GetNormalisedPosition(float positionIncrement)
         {
+            //Debug.Log(positionIncrement);
+            //TODO: 1.5f = 1 || .5
             if(positionIncrement <= 0f)
             {
-                return startPosition;
+                return transform.TransformPoint(startPosition);
             }
             else if(positionIncrement >= 1.0f)
             {
@@ -124,32 +126,26 @@ namespace Electrical
             }
             else
             {
-                //TODO:This is currently outputting the correct key positions at the right increment of time; but not positions between the key positions
-                float currentDistance = 0f;
-                float maxDistance = distances[segmentCount];
-                float currentPositionIncrement = 0f;
-                float lastPositionIncrement = 0f;
-                float incrementDifference = 0f;
-                float segmentIncrement = 0f;
+                float currentIncrement = 0f;
+                float previousIncrement = 0f;
+                float accumulatedDistance = 0f;
 
                 for(int i = 0; i < segmentCount; i++)
                 {
-                    currentDistance += distances[i];
-                    currentPositionIncrement = currentDistance / maxDistance;
+                    previousIncrement = currentIncrement;
+                    accumulatedDistance += distances[i];
+                    currentIncrement = accumulatedDistance / distances[segmentCount];
 
-                    if(currentPositionIncrement >= positionIncrement)
+                    if(currentIncrement > positionIncrement)
                     {
-                        incrementDifference = currentPositionIncrement - lastPositionIncrement;
-                        segmentIncrement = segmentIncrement - lastPositionIncrement;
+                        positionIncrement -= previousIncrement;
+                        currentIncrement -= previousIncrement;
+                        positionIncrement /= currentIncrement;
 
-                        return transform.TransformPoint(Vector3
-                            .Lerp(positions[i], positions[i + 1], segmentIncrement));
-                    }
-                    else
-                    {
-                        lastPositionIncrement = currentPositionIncrement;
+                        return Vector3.Lerp(GetWorldPosition(i), GetWorldPosition(i + 1), positionIncrement);
                     }
                 }
+
                 //TODO: If we get to here, something went wrong; handle error
                 return Vector3.zero;
             }
