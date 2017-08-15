@@ -35,16 +35,30 @@ namespace Electrical
         //TODO: adding or removing points.
         //TODO: Restrict size to atleast 2
         [SerializeField][Tooltip(Tooltips.positions)] private Vector3[] positions;
-        //TODO: float[] distances Comment
+
+        /// <summary>The cached distance between each point in the 
+        /// <see cref="Electrical.ElectricalWire.positions"/> array, with the final value being a 
+        /// total sum.</summary>
+        /// <remarks>Each index represents the distance from the same index in the 
+        /// <see cref="Electrical.ElectricalWire.positions"/> array to the next index. The very 
+        /// last distance contains the total distance between all positions.</remarks>
         private float[] distances;
 
         /// <summary>Returns the starting position of the wire, in world coordinates.</summary>
-        public Vector3 startPosition { get { return transform.TransformPoint(positions[0]); } }
+        public Vector3 startPosition
+        {
+            get
+            {
+                // Return the first position, transformed to world space.
+                return transform.TransformPoint(positions[0]);
+            }
+        }
         /// <summary>Returns the ending position of the wire in world coordinates.</summary>
         public Vector3 endPosition
         {
             get
             {
+                // Return the last position, transformed to world space.
                 return transform.TransformPoint(positions[segmentCount]);
             }
         }
@@ -55,50 +69,77 @@ namespace Electrical
         /// <summary>Returns the count of individual positions.</summary>
         public int positionCount { get { return positions.Length; } }
 
-        //TODO: Start() Comment
+        /// <summary>This method will be called just before the first Update call.</summary>
         protected override void Start()
         {
             // Initialise the distance array by calculating the distances along each wire segment.
             CalculateDistances();
         }
 
-        //TODO: CalculateDistances() Comments
+        /// <summary>Calculates all of the distances in the 
+        /// <see cref="Electrical.ElectricalWire.positions"/> array, and stores them in the 
+        /// <see cref="Electrical.ElectricalWire.distances"/> array.</summary>
         private void CalculateDistances()
         {
+            // Create a new distances array, of the same length as the positions array, and set its 
+            // last value to 0 so that we can add values to it. The last value will be our total.
             distances = new float[positions.Length];
             distances[(distances.Length - 1)] = 0f;
 
             for(int i = 0; i < (distances.Length - 1); i++)
             {
+                // For each element in the distances array, minus the last, set the value as the 
+                // distance between the current corresponding positions value, and the next 
+                // positions value. Add this value to the last element in the distances away, so 
+                // we are left with a total distance.
                 distances[i] = Vector3.Distance(positions[i], positions[i + 1]);
                 distances[distances.Length - 1] += distances[i];
             }
         }
 
-        /// <summary>
-        /// Calculates the distances.
-        /// </summary>
-        /// <param name="positionIndex">The index of the position that has been changed.</param>
-        //TODO:CalculateDistances(int) Comments
+        //TODO: I am not sure CalculateDistances(int) is correct; test, test, test.
+        /// <summary>Calculates the distances of segments connected to a particular position in the 
+        /// <see cref="Electrical.ElectricalWire.positions"/> array.</summary>
+        /// <param name="positionIndex">The index of the position to start calculating distance 
+        /// from.</param>
+        /// <remarks>This method will correct the <see cref="Electrical.ElectricalWire.distances"/>
+        /// array when an individual <c>positionIndex</c> has been changed.</remarks>
         private void CalculateDistances(int positionIndex)
         {
+            // Create a placeholder to store the distance change for updating the total distance.
+            // For further logical ease, this value will be inverted; a negative number will add to 
+            // the final distance, while a positive number will be subtracted from it.
             float distanceDifference;
 
             if(positionIndex <= 1)
             {
+                // If we are working with a positionIndex of 1 or less, we have changed the first 
+                // position. Keep a record of our old segment distance, and calculate the new 
+                // distance of the segment between positions 0 and 1; finally, subtract the new 
+                // distance from the distanceDifference to give the final distanceDifference.
                 distanceDifference = distances[0];
                 distances[0] = Vector3.Distance(positions[0], positions[1]);
                 distanceDifference -= distances[0];
             }
             else if(positionIndex >= segmentCount)
             {
-                distanceDifference = distances[segmentCount];
+                // If we are working with a positionIndex greater to or equal the value of our 
+                // segmentCount, we have changed the last position. Keep a record of our old 
+                // segment distance, and calculate the new distance of the segment between the 
+                // last and second last positions; finally, subtract the new distance from the 
+                // distanceDifference to give the final distanceDifference.
+                distanceDifference = distances[segmentCount - 1];
                 distances[segmentCount - 1] 
                     = Vector3.Distance(positions[segmentCount], positions[segmentCount - 1]);
                 distanceDifference -= distances[segmentCount - 1];
             }
             else
             {
+                // If we are not working with the first or last positionIndex, we need to account 
+                // for the segments on either side of the position. Store the sum of the two 
+                // segment distances, and calculate the new segment distances; finally, subtract 
+                // the new distances from the distanceDifference to give the final 
+                // distanceDifference.
                 distanceDifference = distances[positionIndex] + distances[positionIndex - 1];
                 distances[positionIndex - 1] 
                     = Vector3.Distance(positions[positionIndex - 1], positions[positionIndex]);
@@ -107,46 +148,92 @@ namespace Electrical
                 distanceDifference -= (distances[positionIndex] + distances[positionIndex - 1]);
             }
 
+            // Subtract the final distanceDifference from the final distance, to update the total 
+            // distance sum with all distance changes.
             distances[segmentCount] -= distanceDifference;
         }
 
-        //TODO: GetNormalisedPosition(float) Comments
-        //TODO: Test and clean GetNormalisedPosition(float)
-        public Vector3 GetNormalisedPosition(float positionIncrement)
+        /// <summary>Gets a position along this <see cref="Electrical.ElectricalWire"/>, 
+        /// using a normalised increment. Behaves in a similar fashion to 
+        /// <see cref="UnityEngine.Vector3.Lerp(Vector3, Vector3, float)"/>.</summary>
+        /// <returns>The position along this <see cref="Electrical.ElectricalWire"/>, as defined 
+        /// by the provided increment value.</returns>
+        /// <param name="positionIncrement">The required position increment, where <c>0</c> 
+        /// refers to the <see cref="Electrical.ElectricalWire.startPosition"/>, <c>1</c> refers 
+        /// to the <see cref="Electrical.ElectricalWire.endPosition"/> and <c>0.5</c> refers to a 
+        /// position exactly in the middle.</param>
+        /// <param name="allowRevolution">If set to <c>true</c>, interprets the 
+        /// <c>positionIncrement</c> as revolutionary; that is, <c>1.25f</c> will become 
+        /// <c>0.25f</c>, and <c>4.89f</c> will become <c>0.89f</c>.</param>
+        /// <remarks>Positions are given along the wire; for instance, <c>0.5f</c> will point to 
+        /// the exact middle distance when travelling along the wire specified by the 
+        /// <see cref="Electrical.ElectricalWire.positions"/> coordinates, as opposed to a position 
+        /// in the middle of <see cref="Electrical.ElectricalWire.startPosition"/> and 
+        /// <see cref="Electrical.ElectricalWire.endPosition"/>.</remarks>
+        public Vector3 GetNormalisedPosition(float positionIncrement, bool allowRevolution = false)
         {
-            //Debug.Log(positionIncrement);
-            //TODO: 1.5f = 1 || .5
+            if(allowRevolution)
+            {
+                // If we are permitting revolution, reset the positionIncrement of the modulus of 
+                // 1.0f, to determine the final incremental value.
+                positionIncrement %= 1.0f;
+            }
+
             if(positionIncrement <= 0f)
             {
-                return transform.TransformPoint(startPosition);
+                // If the positionIncrement is the minimum value, we are looking for the 
+                // startPosition.
+                return startPosition;
             }
             else if(positionIncrement >= 1.0f)
             {
+                // If the positionIncrement is the maximum value, we are looking for the 
+                // endPosition.
                 return endPosition;
             }
             else
             {
+                // If we are within the bounds to perform a Lerp, create a plaeholder to store 
+                // the currentIncrement, the previousIncrement and accumulatedDistance, so we 
+                // can determine the correct segment, and the increment within that segment.
                 float currentIncrement = 0f;
                 float previousIncrement = 0f;
                 float accumulatedDistance = 0f;
 
                 for(int i = 0; i < segmentCount; i++)
                 {
+                    // For each segment, store the currentIncrement as the previousIncrement, as 
+                    // this is now our minimum bounds. Add the distance of this segment to our 
+                    // accumulated distance, and divide it by the total overall distance to 
+                    // determine the new currentIncrement, defining this segments maximum bounds.
                     previousIncrement = currentIncrement;
                     accumulatedDistance += distances[i];
                     currentIncrement = accumulatedDistance / distances[segmentCount];
 
                     if(currentIncrement > positionIncrement)
                     {
+                        // If the currentIncrement is now greater than the originally passed in 
+                        // positionIncrement, we are at the intended segment. Subtract the value 
+                        // of our previousIncrement from both the passed in positionIncrement and 
+                        // currentIncrement; this gives us the remaining positionIncrement that 
+                        // we need to adjust for, and the normalised distance of the current 
+                        // segment in relation to the overall total distance. Finally, divide the 
+                        // passed in positionIncrement by the currentIncrement, to determine the 
+                        // final positionIncrement as an increment of the current segment.
                         positionIncrement -= previousIncrement;
                         currentIncrement -= previousIncrement;
                         positionIncrement /= currentIncrement;
 
+                        // Now we have calculated our final increment, we can use it to find the 
+                        // Lerped distance between the positions bounding this segment. Find and 
+                        // return the final position.
                         return Vector3.Lerp(GetWorldPosition(i), GetWorldPosition(i + 1), positionIncrement);
                     }
                 }
 
-                //TODO: If we get to here, something went wrong; handle error
+                // We should never get to here, as we should already have returned a value; in case 
+                // it does happen, throw an error, and return the default Vector3 value.
+                Log.EndOfGetNormalisedPositionsReached(currentIncrement);
                 return Vector3.zero;
             }
         }
@@ -159,7 +246,7 @@ namespace Electrical
         {
             try
             {
-                // Try to return the positions element pointed to by the positionID;
+                // Try to return the positions element pointed to by the positionIndex;
                 return positions[positionIndex];
             }
             catch(System.IndexOutOfRangeException exception)
@@ -171,9 +258,15 @@ namespace Electrical
             }
         }
 
-        //TODO: GetWorldPosition(int) comments
+        /// <summary>Gets the specified position coordinates for this 
+        /// <see cref="Electrical.ElectricalWire">, in world coordinates.</summary>
+        /// <params name="positionIndex">The index of the position to be retrieved.</params>
+        /// <returns>The position coordinates specified by the index.</returns>
         public Vector3 GetWorldPosition(int positionIndex)
         {
+            // Return the positions element pointed to by the positionIndex, in world 
+            // coordinates. Note that we use the GetLocalPosition(int) method to retrieve the 
+            // initial value, which also takes care of error handling.
             return transform.TransformPoint(GetLocalPosition(positionIndex));
         }
 
@@ -430,6 +523,10 @@ namespace Electrical.Utility
             + "position index of {0}.";
         private const string attemptingToSetInvalidPosition = "Attempting to set an invalid " 
             + "position index of {0}.";
+        private const string endOfGetNormalisedPositionsReached = "This is weird; the end of the " 
+            + "GetNormalisedPosition(int, bool) method has been reached, where it should have " 
+            + "returned a value, by now. Returning a position of {0} with a passed in increment " 
+            + "of {1}.";
         
         public static void AttemptingToGetInvalidPosition(int positionID)
         {
@@ -439,6 +536,12 @@ namespace Electrical.Utility
         public static void AttemptingToSetInvalidPosition(int positionID)
         {
             Debug.LogError(string.Format(attemptingToSetInvalidPosition, positionID));
+        }
+
+        public static void EndOfGetNormalisedPositionsReached(float increment)
+        {
+            Debug.LogWarning(string
+                .Format(endOfGetNormalisedPositionsReached, Vector3.zero, increment));
         }
     }
     
