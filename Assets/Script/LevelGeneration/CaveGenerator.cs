@@ -455,9 +455,19 @@ namespace LevelGeneration
                             if(x == tile.x || y == tile.y)
                             {
                                 Debug.Log(map.GetLength(0) + " " + map.GetLength(1) + " " + x + " " + y);
-                                if(map[x, y] == 1)
+
+                                try
                                 {
-                                    edgeTiles.Add(tile);
+                                    if(map[x, y] == 1)
+                                    {
+                                        edgeTiles.Add(tile);
+                                    }
+                                }
+                                catch(System.IndexOutOfRangeException exception)
+                                {
+                                    Debug.Log("IndexOutOfRange: CaveGenerator line 463: | x " + x 
+                                        + " of " + (map.GetLength(0) - 1).ToString() + " | y " + y  + " of " 
+                                        + (map.GetLength(1) - 1).ToString());
                                 }
                             }
                         }

@@ -417,7 +417,7 @@ namespace Electrical.Utility
 
         /// <summary>This method will be called to draw the <see cref="Electrical.ElectricalWire"/>
         /// in to the scene view.</summary>
-        private void OnSceneGUI()
+        void OnSceneGUI()
         {
             // Explicitly reference the target class as an ElectricalWire, so we have ElectricalWire 
             // specific access, and reference the target transform.

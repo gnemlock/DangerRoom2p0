@@ -63,6 +63,8 @@ namespace Electrical
         /// being used for this <see cref="Electrical.ElectricalComponent">.</summary>
         public int componentID { get { return id; } }
 
+        public delegate void ComponentUpdate();
+
         /// <summary>Applys power to this <see cref="Electrical.ElectricalComponent">.</summary>
         /// <param name="voltage">The value of the voltage being applied to this 
         /// <see cref="Electrical.ElectricalComponent">, in volts.</param>
@@ -201,6 +203,17 @@ namespace Electrical
         public virtual float TotalLength()
         {
             return Vector3.Distance(inputPosition, outputPosition);
+        }
+    }
+
+    //TODO:Create Source class for managing all source drawing functions; determine additional automatable functions
+    public abstract class Source : ElectricalComponent 
+    {
+        /// <summary>This method will be called at the start of each frame where this instance 
+        /// of <see cref="Electrical.Source"/> is enabled.</summary>
+        void Update ()
+        {
+
         }
     }
 

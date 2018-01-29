@@ -55,7 +55,8 @@ public class SecurityCamera : MonoBehaviour
         if(active)
         {
             //pivotPoint.transform.Rotate((finish - start) * speed * Time.deltaTime);
-            Quaternion rotation = Quaternion.RotateTowards(pivotPoint.rotation, Quaternion.Euler(currentTargetRotation), speed * Time.deltaTime);
+            Quaternion rotation = Quaternion.RotateTowards(pivotPoint.rotation, 
+                Quaternion.Euler(currentTargetRotation), speed * Time.deltaTime);
             pivotPoint.rotation = rotation;
             
             Debug.Log(pivotPoint.rotation.eulerAngles + " : " + currentTargetRotation);

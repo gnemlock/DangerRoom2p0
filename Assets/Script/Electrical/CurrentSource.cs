@@ -14,16 +14,15 @@ namespace Electrical
     using Tags = Utility.ElectricalTags;
 
     #if UNITY_EDITOR
-    using Tooltips = Utility.SourceTooltips;
-    using Colours = Utility.SourceColours;
-    using Dimensions = Utility.SourceDimensions;
+    using Tooltips = Utility.CurrentSourceTooltips;
+    using Colours = Utility.CurrentSourceColours;
+    using Dimensions = Utility.CurrentSourceDimensions;
     #endif
 
-    //TODO:Create Source class for managing all source drawing functions; determine additional automatable functions
-    public abstract class Source : ElectricalComponent 
+    public class CurrentSource : MonoBehaviour 
     {
         /// <summary>This method will be called at the start of each frame where this instance 
-        /// of <see cref="Electrical.Source"/> is enabled.</summary>
+        /// of <see cref="Electrical.CurrentSource"/> is enabled.</summary>
         void Update ()
         {
             
@@ -33,29 +32,29 @@ namespace Electrical
 
 namespace Electrical.Utility
 {
-    [CustomEditor(typeof(Source))] public class SourceEditor : Editor
+    [CustomEditor(typeof(CurrentSource))] public class CurrentSourceEditor : Editor
     {
         public override void OnInspectorGUI()
         {
             DrawDefaultInspector();
 
-            Source source = target as Source;
+            CurrentSource currentSource = target as CurrentSource;
         }
     }
 
     #if UNITY_EDITOR
     // Strings used to generate tooltips for the editor.
-    public static class SourceTooltips
+    public static class CurrentSourceTooltips
     {
     }
 
     // Colours for use in displaying custom editor GUI.
-    public static class SourceColours
+    public static class CurrentSourceColours
     {
     }
 
     // Dimensions for use in displaying custom editor GUI.
-    public static class SourceDimensions
+    public static class CurrentSourceDimensions
     {
     }
     #endif
